@@ -17,7 +17,7 @@ public enum UserActionType {
     DOWNLOAD_FCFS_COUPON("선착순 쿠폰 다운로드"),
     ROULETTE_SPIN("룰렛 돌리기"),
     STAMP_CHECK_IN("스탬프 출석"),
-    BENEFIT_USAGE("혜택 사용");
+    POS_USAGE("결제시 사용된 혜택");
 
     private final String description;
 
