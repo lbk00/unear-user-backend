@@ -30,7 +30,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     private final FranchiseRepository franchiseRepository;
 
     @Override
-    public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long discountPolicyDetailId) {
+    public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId) {
         GeneralDiscountPolicy detail = generalDiscountPolicyRepository.findWithPlaceAndFranchiseById(discountPolicyDetailId)
                 .orElseThrow(() -> new BenefitNotFoundException("해당 혜택 정보를 찾을 수 없습니다."));
 
@@ -38,7 +38,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     }
 
     @Override
-    public Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(FranchiseDiscountPolicyRequestDto requestDto) {
+    public Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(Long userId, FranchiseDiscountPolicyRequestDto requestDto) {
         Pageable pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize(), Sort.by("franchiseId").ascending());
 
         Specification<Franchise> spec = (root, query, cb) -> {
@@ -59,7 +59,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     }
 
     @Override
-    public FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long franchiseId) {
+    public FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long userId, Long franchiseId) {
         Franchise franchise = franchiseRepository.findWithPoliciesByFranchiseId(franchiseId)
                 .orElseThrow(() -> new BenefitNotFoundException("프랜차이즈 혜택을 찾을 수 없습니다."));
         return FranchiseDiscountPolicyDetailResponseDto.from(franchise);
