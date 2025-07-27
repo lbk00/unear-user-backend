@@ -8,7 +8,9 @@ import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.FranchiseRepository;
 import com.unear.userservice.benefit.service.DiscountPolicyService;
+import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.BenefitNotFoundException;
+import com.unear.userservice.common.redis.producer.UserActionLogProducer;
 import com.unear.userservice.place.entity.Franchise;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
     private final FranchiseRepository franchiseRepository;
+    private final UserActionLogProducer userActionLogProducer;
 
     @Override
     public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId) {
@@ -62,6 +65,15 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     public FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long userId, Long franchiseId) {
         Franchise franchise = franchiseRepository.findWithPoliciesByFranchiseId(franchiseId)
                 .orElseThrow(() -> new BenefitNotFoundException("프랜차이즈 혜택을 찾을 수 없습니다."));
+
+
+        userActionLogProducer.sendLog(
+                String.valueOf(userId),
+                UserActionType.BENEFIT_DETAIL.name(),
+                "franchiseName:" + franchise.getName()
+        );
+
+
         return FranchiseDiscountPolicyDetailResponseDto.from(franchise);
     }
 
