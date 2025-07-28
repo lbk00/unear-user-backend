@@ -31,4 +31,9 @@ public interface AuthService {
 
     void changePassword(Long userId, ChangePasswordRequestDto dto); // 비밀번호 변경
 
+    String findMaskedEmailByTel(String tel);
+
+    void sendResetPasswordCode(String email);   // 비밀번호 재설정 인증코드 보내기
+
+    void verifyResetPasswordCode(VerifyResetPasswordCodeRequestDto dto); // 인증코드 검증
 }

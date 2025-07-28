@@ -23,4 +23,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.membershipCode FROM User u WHERE u.userId = :userId")
     String findMembershipCodeByUserId(@Param("userId") Long userId);
 
+    Optional<User> findByTel(String tel);
 }

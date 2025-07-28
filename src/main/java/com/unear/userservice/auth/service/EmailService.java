@@ -7,4 +7,5 @@ public interface EmailService {
     boolean verifyCode(String email, String code); // 인증코드 검증
     boolean isVerified(String email);
     void removeVerified(String email);
+    void sendResetPasswordCode(String email ,String code);
 }
