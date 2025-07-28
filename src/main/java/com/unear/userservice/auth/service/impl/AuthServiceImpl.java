@@ -1,9 +1,7 @@
 package com.unear.userservice.auth.service.impl;
 
-import com.unear.userservice.auth.dto.request.CompleteProfileRequestDto;
-import com.unear.userservice.auth.dto.request.LoginRequestDto;
-import com.unear.userservice.auth.dto.request.ResetPasswordRequestDto;
-import com.unear.userservice.auth.dto.request.SignupRequestDto;
+import ch.qos.logback.core.spi.ErrorCodes;
+import com.unear.userservice.auth.dto.request.*;
 import com.unear.userservice.auth.dto.response.LoginResponseDto;
 import com.unear.userservice.auth.dto.response.LogoutResponseDto;
 import com.unear.userservice.auth.dto.response.ProfileUpdateResponseDto;
@@ -11,6 +9,8 @@ import com.unear.userservice.auth.dto.response.RefreshResponseDto;
 import com.unear.userservice.auth.dto.response.SignupResponseDto;
 import com.unear.userservice.auth.service.AuthService;
 import com.unear.userservice.common.enums.LoginProvider;
+import com.unear.userservice.common.exception.BusinessException;
+import com.unear.userservice.common.exception.ErrorCode;
 import com.unear.userservice.common.jwt.JwtTokenProvider;
 import com.unear.userservice.common.jwt.RefreshTokenService;
 import com.unear.userservice.common.response.ApiResponse;
@@ -24,6 +24,7 @@ import com.unear.userservice.user.entity.User;
 import com.unear.userservice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -202,5 +203,18 @@ public class AuthServiceImpl implements AuthService {
         Long userId = jwtTokenProvider.extractUserId(accessToken);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다"));
+    }
+
+    @Transactional
+    @Override
+    public void changePassword(Long userId, ChangePasswordRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        user.changePassword(dto.getNewPassword(), passwordEncoder);
     }
 }
