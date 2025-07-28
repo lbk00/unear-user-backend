@@ -102,7 +102,7 @@ public class AuthController {
             @AuthenticationPrincipal CustomUser user,
             @RequestBody @Valid ChangePasswordRequestDto requestDto
     ) {
-        authService.changePassword(user.getId(), requestDto);
+        authService.changePassword(user.getUser().getUserId(), requestDto);
         return ResponseEntity.ok().build();
     }
 
