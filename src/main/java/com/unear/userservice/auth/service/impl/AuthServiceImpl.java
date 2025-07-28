@@ -8,6 +8,7 @@ import com.unear.userservice.auth.dto.response.ProfileUpdateResponseDto;
 import com.unear.userservice.auth.dto.response.RefreshResponseDto;
 import com.unear.userservice.auth.dto.response.SignupResponseDto;
 import com.unear.userservice.auth.service.AuthService;
+import com.unear.userservice.auth.service.EmailService;
 import com.unear.userservice.common.enums.LoginProvider;
 import com.unear.userservice.common.exception.BusinessException;
 import com.unear.userservice.common.exception.ErrorCode;
@@ -27,9 +28,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
@@ -42,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final CustomUserDetailsService customUserDetailsService;
+    private static final String RESET_PASSWORD_PREFIX = "resetVerified:";
+    private final EmailService emailService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public ApiResponse<LoginResponseDto> login(LoginRequestDto loginRequest, HttpServletResponse response) {
@@ -161,15 +168,26 @@ public class AuthServiceImpl implements AuthService {
         return ApiResponse.success("회원가입 성공", responseDto);
     }
 
+    @Transactional
     @Override
-    public void resetPassword(ResetPasswordRequestDto request) {
+    public void resetPassword(ResetPasswordRequestDto dto) {
+        String key = "resetVerified:" + dto.getEmail();
+        String verified = redisTemplate.opsForValue().get(key);
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+        if (!"true".equals(verified)) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
 
-        String newEncodedPassword = passwordEncoder.encode(request.getNewPassword());
-        user.setPassword(newEncodedPassword);
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
+
+        String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
+        user.setPassword(encodedPassword);
+
         userRepository.save(user);
+
+        // 비밀번호 재설정 완료 후 인증 상태 삭제
+        redisTemplate.delete(key);
     }
 
     @Override
@@ -216,5 +234,52 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.changePassword(dto.getNewPassword(), passwordEncoder);
+    }
+
+    @Override
+    public String findMaskedEmailByTel(String tel) {
+        User user = userRepository.findByTel(tel)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
+
+        return maskEmail(user.getEmail());
+    }
+    private String maskEmail(String email) {
+        int atIndex = email.indexOf("@");
+        if (atIndex == -1) {
+            throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다");
+        }
+        String local = email.substring(0, atIndex);
+        String domain = email.substring(atIndex + 1);
+        int maskLength = Math.max(1, (int) (local.length() * 0.3));
+        String visible = local.substring(0, local.length() - maskLength);
+        String masked = "*".repeat(maskLength);
+        return visible + masked + "@" + domain;
+    }
+
+    @Override
+    public void sendResetPasswordCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
+        SecureRandom random = new SecureRandom();
+        String code = String.format("%06d", random.nextInt(1000000));
+        redisTemplate.opsForValue().set(
+                RESET_PASSWORD_PREFIX + email,
+                code,
+                Duration.ofMinutes(5)
+        );
+        emailService.sendResetPasswordCode(email, code);
+    }
+
+    @Override
+    public void verifyResetPasswordCode(VerifyResetPasswordCodeRequestDto dto) {
+        String key = RESET_PASSWORD_PREFIX + dto.getEmail();
+        String savedCode = redisTemplate.opsForValue().get(key);
+
+        if (savedCode == null || !savedCode.equals(dto.getCode())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // 인증 성공 → 인증 상태 저장 (선택)
+        redisTemplate.opsForValue().set(RESET_PASSWORD_PREFIX + dto.getEmail(), "true", Duration.ofMinutes(10));
     }
 }

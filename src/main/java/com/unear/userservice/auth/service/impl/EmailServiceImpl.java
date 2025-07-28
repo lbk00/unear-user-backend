@@ -36,6 +36,14 @@ public class EmailServiceImpl implements EmailService {
         mailSender.send(message);
     }
 
+    private void sendEmailWithSubject(String toEmail, String subject, String messageText) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject(subject);
+        message.setText(messageText);
+        mailSender.send(message);
+    }
+
     @Override
     public void saveCode(String email, String code) {
         redisTemplate.opsForValue().set("emailCode:" + email, code, Duration.ofMinutes(5));
@@ -60,6 +68,15 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void removeVerified(String email) {
         redisTemplate.delete("emailVerified:" + email);
+    }
+
+    @Override
+    public void sendResetPasswordCode(String email,String code) {
+        String subject = "[서비스명] 비밀번호 재설정 인증번호";
+        String message = "요청하신 비밀번호 재설정을 위한 인증번호는 다음과 같습니다.\n\n"
+                + "인증번호: " + code + "\n\n"
+                + "5분 내로 입력해 주세요.";
+        sendEmailWithSubject(email, subject, message);
     }
 
 }

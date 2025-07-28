@@ -1,11 +1,7 @@
 package com.unear.userservice.auth.controller;
 
 import com.unear.userservice.auth.dto.request.*;
-import com.unear.userservice.auth.dto.response.LoginResponseDto;
-import com.unear.userservice.auth.dto.response.LogoutResponseDto;
-import com.unear.userservice.auth.dto.response.ProfileUpdateResponseDto;
-import com.unear.userservice.auth.dto.response.RefreshResponseDto;
-import com.unear.userservice.auth.dto.response.SignupResponseDto;
+import com.unear.userservice.auth.dto.response.*;
 import com.unear.userservice.auth.service.AuthService;
 import com.unear.userservice.auth.service.EmailService;
 import com.unear.userservice.common.response.ApiResponse;
@@ -86,15 +82,10 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
-
-        if (!emailService.isVerified(request.getEmail())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail(ErrorCode.EMAIL_NOT_VERIFIED));
-        }
-        authService.resetPassword(request);
-        emailService.removeVerified(request.getEmail());
-
-        return ResponseEntity.ok(ApiResponse.success("비밀번호가 성공적으로 재설정되었습니다."));
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @RequestBody @Valid ResetPasswordRequestDto dto) {
+        authService.resetPassword(dto);
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 재설정되었습니다."));
     }
 
     @PutMapping("/password")
@@ -105,5 +96,29 @@ public class AuthController {
         authService.changePassword(user.getUser().getUserId(), requestDto);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/find-id")
+    public ResponseEntity<MaskedEmailResponseDto> findEmailByTel(
+            @RequestBody @Valid FindEmailRequestDto requestDto
+    ) {
+        String maskedEmail = authService.findMaskedEmailByTel(requestDto.getTel());
+        return ResponseEntity.ok(new MaskedEmailResponseDto(maskedEmail));
+    }
+
+    @PostMapping("/reset-password/send-code")
+    public ResponseEntity<Void> sendResetPasswordCode(
+            @RequestBody @Valid ResetPasswordEmailRequestDto requestDto
+    ) {
+        authService.sendResetPasswordCode(requestDto.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password/verify")
+    public ResponseEntity<ApiResponse<String>> verifyResetPasswordCode(
+            @RequestBody @Valid VerifyResetPasswordCodeRequestDto dto) {
+        authService.verifyResetPasswordCode(dto);
+        return ResponseEntity.ok(ApiResponse.success("인증코드 검증 성공"));
+    }
+
 
 }
