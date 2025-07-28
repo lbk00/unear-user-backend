@@ -24,8 +24,8 @@ public class SwaggerConfig {
                 .name("Authorization");
 
         Server server = new Server()
-                .url("http://dev.unear.site/api/app")
-                .description("배포 서버");
+                .url("https://dev.unear.site/api/app")
+                .description("개발 서버");
 
         return new OpenAPI()
                 .info(new Info().title("API Test Document")
