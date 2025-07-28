@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final CustomUserDetailsService customUserDetailsService;
-    private static final String RESET_PASSWORD_PREFIX = "reset:";
+    private static final String RESET_PASSWORD_PREFIX = "resetVerified:";
     private final EmailService emailService;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -284,6 +284,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 인증 성공 → 인증 상태 저장 (선택)
-        redisTemplate.opsForValue().set("resetVerified:" + dto.getEmail(), "true", Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(RESET_PASSWORD_PREFIX + dto.getEmail(), "true", Duration.ofMinutes(10));
     }
 }
