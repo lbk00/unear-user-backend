@@ -22,21 +22,24 @@ public class UserActionLogProducer {
 
     @Async
     public void sendLog(String userId, String actionType, String screen , String metadata) {
-        Map<String, String> data = new HashMap<>();
-        data.put("userId", userId);
-        data.put("actionType", actionType);
-        data.put("screen", screen);
-        data.put("metadata", metadata);
-        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
-        log.info("[로그 전송] userId={}, actionType={}, screen={}, metadata={}", userId, actionType, screen, metadata);
+        try {
+            Map<String, String> data = new HashMap<>();
+            data.put("userId", userId);
+            data.put("actionType", actionType);
+            data.put("screen", screen);
+            data.put("metadata", metadata);
+            data.put("timestamp", String.valueOf(System.currentTimeMillis()));
+            log.info("[로그 전송] userId={}, actionType={}, screen={}, metadata={}", userId, actionType, screen, metadata);
 
-        redisTemplate.opsForStream()
-                .add(MapRecord.create(STREAM_KEY, data));
+            redisTemplate.opsForStream()
+                    .add(MapRecord.create(STREAM_KEY, data));
+        } catch (Exception e) {
+            log.error("Redis 스트림 로그 전송 실패: userId={}, actionType={}", userId, actionType, e);
+            }
     }
 
     public void logUserAction(Long userId, UserActionType actionType, String screen, String metadata) {
         if (userId == null) return;
-
         try {
             sendLog(
                     userId.toString(),
