@@ -4,11 +4,9 @@ import com.unear.userservice.benefit.entity.FranchiseDiscountPolicy;
 import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
-import com.unear.userservice.common.enums.CouponStatus;
-import com.unear.userservice.common.enums.DiscountPolicy;
-import com.unear.userservice.common.enums.MembershipGrade;
-import com.unear.userservice.common.enums.PlaceType;
+import com.unear.userservice.common.enums.*;
 import com.unear.userservice.common.exception.exception.*;
+import com.unear.userservice.common.redis.producer.UserActionLogProducer;
 import com.unear.userservice.coupon.dto.response.CouponResponseDto;
 import com.unear.userservice.coupon.dto.response.UserCouponDetailResponseDto;
 import com.unear.userservice.coupon.dto.response.UserCouponListResponseDto;
@@ -41,6 +39,7 @@ public class CouponServiceImpl implements CouponService {
     private final CouponTemplateRepository couponTemplateRepository;
     private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
+    private final UserActionLogProducer userActionLogProducer;
 
     @Override
     @Transactional
@@ -117,6 +116,25 @@ public class CouponServiceImpl implements CouponService {
                 .barcodeNumber(generateUniqueBarcode())
                 .build();
 
+        if (template.getDiscountCode() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.DOWNLOAD_COUPON.name(),
+                    "mapPage",
+                    "benefit:" + template.getDiscountCode()
+            );
+        }
+
+        if (template.getMembershipCode() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.DOWNLOAD_COUPON.name(),
+                    "mapPage",
+                    "grade:" + template.getMembershipCode()
+            );
+        }
+
+
         try {
             userCouponRepository.save(userCoupon);
         } catch (DataIntegrityViolationException e) {
@@ -149,6 +167,24 @@ public class CouponServiceImpl implements CouponService {
                 .couponStatusCode(CouponStatus.UNUSED.getCode())
                 .barcodeNumber(generateUniqueBarcode())
                 .build();
+
+        if (template.getDiscountCode() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.DOWNLOAD_FCFS_COUPON.name(),
+                    "eventPage",
+                    "benefit:" + template.getDiscountCode()
+            );
+        }
+
+        if (template.getMembershipCode() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.DOWNLOAD_FCFS_COUPON.name(),
+                    "eventPage",
+                    "grade:" + template.getMembershipCode()
+            );
+        }
 
         try {
             userCouponRepository.save(userCoupon);

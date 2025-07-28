@@ -57,6 +57,24 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
+        if (requestDto.getFranchiseName() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.BENEFIT_KEYWORD.name(),
+                    "benefitPage",
+                    "keyword:" + requestDto.getFranchiseName()
+            );
+        }
+        if (requestDto.getCategoryCode() != null) {
+            userActionLogProducer.sendLog(
+                    String.valueOf(userId),
+                    UserActionType.BENEFIT_CATEGORY.name(),
+                    "benefitPage",
+                    "category:" + requestDto.getCategoryCode()
+            );
+        }
+
+
         return franchiseRepository.findAll(spec, pageable)
                 .map(FranchiseDiscountPolicyResponseDto::from);
     }
@@ -70,6 +88,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         userActionLogProducer.sendLog(
                 String.valueOf(userId),
                 UserActionType.BENEFIT_DETAIL.name(),
+                "benefitPage",
                 "franchiseName:" + franchise.getName()
         );
 

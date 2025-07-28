@@ -4,8 +4,10 @@ import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.common.enums.PlaceType;
+import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.PlaceNotFoundException;
 import com.unear.userservice.common.exception.exception.UserNotFoundException;
+import com.unear.userservice.common.redis.producer.UserActionLogProducer;
 import com.unear.userservice.coupon.dto.response.CouponResponseDto;
 import com.unear.userservice.coupon.entity.CouponTemplate;
 import com.unear.userservice.coupon.entity.UserCoupon;
@@ -33,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PlaceServiceImpl implements PlaceService {
@@ -45,6 +48,7 @@ public class PlaceServiceImpl implements PlaceService {
     private final FranchiseDiscountPolicyRepository franchiseDiscountPolicyRepository;
     private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
     private final BenefitDescriptionResolver benefitDescriptionResolver;
+    private final UserActionLogProducer userActionLogProducer;
 
     private List<String> nullIfBlank(List<String> list) {
         if (list == null) return List.of();
@@ -76,6 +80,51 @@ public class PlaceServiceImpl implements PlaceService {
         Set<Long> favorites = (userId != null)
                 ? favoritePlaceRepository.findPlaceIdsByUserId(userId)
                 : Collections.emptySet();
+
+
+        if (requestDto.getBenefitCategory() != null) {
+            for (String benefit : requestDto.getBenefitCategory()) {
+                try {
+                    userActionLogProducer.sendLog(
+                            String.valueOf(userId),
+                            UserActionType.PLACE_FILTER.name(),
+                            "mapPage",
+                            "benefit:" + benefit
+                    );
+                } catch (Exception e) {
+                    log.warn("benefitCategory 로그 전송 실패", e);
+                }
+            }
+        }
+
+        if (requestDto.getCategoryCode() != null) {
+            for (String category : requestDto.getCategoryCode()) {
+                try {
+                    userActionLogProducer.sendLog(
+                            String.valueOf(userId),
+                            UserActionType.PLACE_FILTER.name(),
+                            "mapPage",
+                            "category:" + category
+                    );
+                } catch (Exception e) {
+                    log.warn("categoryCode 로그 전송 실패", e);
+                }
+            }
+        }
+
+        if (requestDto.getKeyword() != null) {
+            try {
+                userActionLogProducer.sendLog(
+                        String.valueOf(userId),
+                        UserActionType.PLACE_KEYWORD.name(),
+                        "mapPage",
+                        "keyword:" + requestDto.getKeyword()
+                );
+            } catch (Exception e) {
+                log.warn("PLACE_KEYWORD 로그 전송 실패", e);
+            }
+        }
+
 
         return places.stream()
                 .map(place -> PlaceRenderResponseDto.from(place, favorites.contains(place.getPlaceId())))
@@ -172,6 +221,32 @@ public class PlaceServiceImpl implements PlaceService {
 
         String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
 
+        if (place.getCategoryCode() != null) {
+            try {
+                userActionLogProducer.sendLog(
+                        String.valueOf(userId),
+                        UserActionType.VIEW_PLACE_DETAIL.name(),
+                        "mapPage",
+                        "category:" + place.getCategoryCode()
+                );
+            } catch (Exception e) {
+                log.warn("VIEW_PLACE_DETAIL 로그 전송 실패", e);
+            }
+        }
+
+        if (place.getBenefitCategory() != null) {
+            try {
+                userActionLogProducer.sendLog(
+                        String.valueOf(userId),
+                        UserActionType.VIEW_PLACE_DETAIL.name(),
+                        "mapPage",
+                        "benefit:" + place.getBenefitCategory()
+                );
+            } catch (Exception e) {
+                log.warn("VIEW_PLACE_DETAIL 로그 전송 실패", e);
+            }
+        }
+
         return NearbyPlaceWithCouponsDto.builder()
                 .placeId(place.getPlaceId())
                 .name(place.getPlaceName())
@@ -207,6 +282,27 @@ public class PlaceServiceImpl implements PlaceService {
             boolean newStatus = !Boolean.TRUE.equals(favorite.getIsFavorited());
             favorite.setIsFavorited(newStatus);
             favorite.setDeletedAt(newStatus ? null : LocalDateTime.now());
+
+
+            if (newStatus) { // 즐겨찾기 ON일 때만 로그 전송
+                try {
+                    userActionLogProducer.sendLog(
+                            String.valueOf(userId),
+                            UserActionType.FAVORITE_ON.name(),
+                            "mapPage",
+                            "category:" + favorite.getPlace().getCategoryCode()
+                    );
+                    userActionLogProducer.sendLog(
+                            String.valueOf(userId),
+                            UserActionType.FAVORITE_ON.name(),
+                            "mapPage",
+                            "benefit:" + favorite.getPlace().getBenefitCategory()
+                    );
+                } catch (Exception e) {
+                    log.warn("즐겨찾기 로그 전송 실패", e);
+                }
+            }
+
             return newStatus;
         } else {
             FavoritePlace favorite = new FavoritePlace();
