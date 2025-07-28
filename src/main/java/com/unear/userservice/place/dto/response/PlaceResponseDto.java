@@ -13,6 +13,7 @@ public class PlaceResponseDto {
     private String placeName;
     private String placeDesc;
     private String address;
+    private String tel;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String benefitCategory;
@@ -31,6 +32,7 @@ public class PlaceResponseDto {
                 .placeName(place.getPlaceName())
                 .placeDesc(place.getPlaceDesc())
                 .address(place.getAddress())
+                .tel(place.getTel())
                 .latitude(place.getLatitude())
                 .longitude(place.getLongitude())
                 .benefitCategory(place.getBenefitCategory())
