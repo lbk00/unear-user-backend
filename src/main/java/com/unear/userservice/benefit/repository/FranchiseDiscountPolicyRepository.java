@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface FranchiseDiscountPolicyRepository extends JpaRepository<FranchiseDiscountPolicy, Long> {
@@ -14,4 +15,8 @@ public interface FranchiseDiscountPolicyRepository extends JpaRepository<Franchi
     List<Long> findPolicyIdsByFranchiseId(@Param("franchiseId") Long franchiseId);
 
     List<FranchiseDiscountPolicy> findByFranchise_FranchiseId(Long franchiseId);
+
+    @Query("SELECT p FROM FranchiseDiscountPolicy p JOIN FETCH p.franchise WHERE p.franchiseDiscountPolicyId = :id")
+    Optional<FranchiseDiscountPolicy> findWithFranchiseById(@Param("id") Long id);
+
 }

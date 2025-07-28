@@ -8,7 +8,9 @@ import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.FranchiseRepository;
 import com.unear.userservice.benefit.service.DiscountPolicyService;
+import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.BenefitNotFoundException;
+import com.unear.userservice.common.redis.producer.UserActionLogProducer;
 import com.unear.userservice.place.entity.Franchise;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +30,10 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
     private final FranchiseRepository franchiseRepository;
+    private final UserActionLogProducer userActionLogProducer;
 
     @Override
-    public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long discountPolicyDetailId) {
+    public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId) {
         GeneralDiscountPolicy detail = generalDiscountPolicyRepository.findWithPlaceAndFranchiseById(discountPolicyDetailId)
                 .orElseThrow(() -> new BenefitNotFoundException("해당 혜택 정보를 찾을 수 없습니다."));
 
@@ -38,7 +41,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     }
 
     @Override
-    public Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(FranchiseDiscountPolicyRequestDto requestDto) {
+    public Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(Long userId, FranchiseDiscountPolicyRequestDto requestDto) {
         Pageable pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize(), Sort.by("franchiseId").ascending());
 
         Specification<Franchise> spec = (root, query, cb) -> {
@@ -54,14 +57,27 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
+        if (requestDto.getFranchiseName() != null) {
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_KEYWORD, "benefitPage", "keyword:" + requestDto.getFranchiseName());
+        }
+
+        if (requestDto.getCategoryCode() != null) {
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_CATEGORY, "benefitPage", "category:" + requestDto.getCategoryCode());
+        }
+
+
+
         return franchiseRepository.findAll(spec, pageable)
                 .map(FranchiseDiscountPolicyResponseDto::from);
     }
 
     @Override
-    public FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long franchiseId) {
+    public FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long userId, Long franchiseId) {
         Franchise franchise = franchiseRepository.findWithPoliciesByFranchiseId(franchiseId)
                 .orElseThrow(() -> new BenefitNotFoundException("프랜차이즈 혜택을 찾을 수 없습니다."));
+
+        userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", "franchiseName:" + franchise.getName());
+
         return FranchiseDiscountPolicyDetailResponseDto.from(franchise);
     }
 

@@ -8,8 +8,8 @@ import org.springframework.data.domain.Page;
 
 public interface DiscountPolicyService {
 
-    GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long discountPolicyDetailId);
-    Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(FranchiseDiscountPolicyRequestDto requestDto);
-    FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long franchiseId);
+    GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId);
+    Page<FranchiseDiscountPolicyResponseDto> getFranchiseDiscountPolicies(Long userId, FranchiseDiscountPolicyRequestDto requestDto);
+    FranchiseDiscountPolicyDetailResponseDto getFranchiseDiscountPolicyDetail(Long userId, Long franchiseId);
 
 }

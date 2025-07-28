@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class UserCouponDetailResponseDto {
 
     private Long userCouponId;
+    private String brandName;
     private String couponName;
     private String barcodeNumber;
     private String couponStatusCode;

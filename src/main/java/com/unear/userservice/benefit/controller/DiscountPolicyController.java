@@ -8,11 +8,13 @@ import com.unear.userservice.benefit.dto.response.FranchiseDiscountPolicyRespons
 import com.unear.userservice.benefit.service.DiscountPolicyService;
 import com.unear.userservice.common.docs.benefit.BenefitApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
+import com.unear.userservice.common.security.CustomUser;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,27 +28,33 @@ public class DiscountPolicyController {
     @BenefitApiDocs.GetGeneralDiscountPolicyDetail
     @GetMapping("/{discount_policy_detail_id}")
     public ResponseEntity<ApiResponse<GeneralDiscountPolicyDetailResponseDto>> getDiscountPolicyDetail(
-            @PathVariable("discount_policy_detail_id") Long discountPolicyDetailId
+            @PathVariable("discount_policy_detail_id") Long discountPolicyDetailId,
+            @AuthenticationPrincipal CustomUser user
     ) {
-        GeneralDiscountPolicyDetailResponseDto response = discountPolicyService.getDiscountPolicyDetail(discountPolicyDetailId);
+        Long userId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : null;
+        GeneralDiscountPolicyDetailResponseDto response = discountPolicyService.getDiscountPolicyDetail(userId, discountPolicyDetailId);
         return ResponseEntity.ok(ApiResponse.success("혜택 상세 조회 성공", response));
     }
 
     @BenefitApiDocs.GetFranchiseDiscountPolicyList
     @GetMapping("/franchise")
     public ResponseEntity<ApiResponse<Page<FranchiseDiscountPolicyResponseDto>>> getFranchiseDiscountPolicies(
-            @ParameterObject @ModelAttribute FranchiseDiscountPolicyRequestDto requestDto
+            @ParameterObject @ModelAttribute FranchiseDiscountPolicyRequestDto requestDto,
+            @AuthenticationPrincipal CustomUser user
     ) {
-        Page<FranchiseDiscountPolicyResponseDto> response = discountPolicyService.getFranchiseDiscountPolicies(requestDto);
+        Long userId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : null;
+        Page<FranchiseDiscountPolicyResponseDto> response = discountPolicyService.getFranchiseDiscountPolicies(userId, requestDto);
         return ResponseEntity.ok(ApiResponse.success("프랜차이즈 혜택 리스트 조회 성공", response));
     }
 
     @BenefitApiDocs.GetFranchiseDiscountPolicyDetail
     @GetMapping("/franchise/{franchise_id}")
     public ResponseEntity<ApiResponse<FranchiseDiscountPolicyDetailResponseDto>> getFranchiseDiscountPolicyDetail(
-            @PathVariable("franchise_id") Long franchiseId
+            @PathVariable("franchise_id") Long franchiseId,
+            @AuthenticationPrincipal CustomUser user
     ) {
-        FranchiseDiscountPolicyDetailResponseDto response = discountPolicyService.getFranchiseDiscountPolicyDetail(franchiseId);
+        Long userId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : null;
+        FranchiseDiscountPolicyDetailResponseDto response = discountPolicyService.getFranchiseDiscountPolicyDetail(userId, franchiseId);
         return ResponseEntity.ok(ApiResponse.success("프랜차이즈 혜택 상세 조회 성공", response));
     }
 

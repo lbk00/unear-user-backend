@@ -4,8 +4,10 @@ import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.common.enums.PlaceType;
+import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.PlaceNotFoundException;
 import com.unear.userservice.common.exception.exception.UserNotFoundException;
+import com.unear.userservice.common.redis.producer.UserActionLogProducer;
 import com.unear.userservice.coupon.dto.response.CouponResponseDto;
 import com.unear.userservice.coupon.entity.CouponTemplate;
 import com.unear.userservice.coupon.entity.UserCoupon;
@@ -33,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PlaceServiceImpl implements PlaceService {
@@ -45,6 +48,7 @@ public class PlaceServiceImpl implements PlaceService {
     private final FranchiseDiscountPolicyRepository franchiseDiscountPolicyRepository;
     private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
     private final BenefitDescriptionResolver benefitDescriptionResolver;
+    private final UserActionLogProducer userActionLogProducer;
 
     private List<String> nullIfBlank(List<String> list) {
         if (list == null) return List.of();
@@ -76,6 +80,24 @@ public class PlaceServiceImpl implements PlaceService {
         Set<Long> favorites = (userId != null)
                 ? favoritePlaceRepository.findPlaceIdsByUserId(userId)
                 : Collections.emptySet();
+
+
+        if (requestDto.getBenefitCategory() != null) {
+            for (String benefit : requestDto.getBenefitCategory()) {
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "benefit:" + benefit);
+            }
+        }
+
+        if (requestDto.getCategoryCode() != null) {
+            for (String category : requestDto.getCategoryCode()) {
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "category:" + category);
+            }
+        }
+
+        if (requestDto.getKeyword() != null) {
+            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", "keyword:" + requestDto.getKeyword() );
+        }
+
 
         return places.stream()
                 .map(place -> PlaceRenderResponseDto.from(place, favorites.contains(place.getPlaceId())))
@@ -172,6 +194,14 @@ public class PlaceServiceImpl implements PlaceService {
 
         String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
 
+        if (place.getCategoryCode() != null) {
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "category:" + place.getCategoryCode());
+        }
+
+        if (place.getBenefitCategory() != null) {
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "benefit:" + place.getBenefitCategory());
+        }
+
         return NearbyPlaceWithCouponsDto.builder()
                 .placeId(place.getPlaceId())
                 .name(place.getPlaceName())
@@ -207,6 +237,19 @@ public class PlaceServiceImpl implements PlaceService {
             boolean newStatus = !Boolean.TRUE.equals(favorite.getIsFavorited());
             favorite.setIsFavorited(newStatus);
             favorite.setDeletedAt(newStatus ? null : LocalDateTime.now());
+
+
+            if (newStatus) {
+                Place place = favorite.getPlace();
+                if (place.getCategoryCode() != null) {
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "category:" + place.getCategoryCode());
+                }
+
+                if (place.getBenefitCategory() != null) {
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "benefit:" + place.getBenefitCategory());
+                }
+            }
+
             return newStatus;
         } else {
             FavoritePlace favorite = new FavoritePlace();
