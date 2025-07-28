@@ -117,23 +117,12 @@ public class CouponServiceImpl implements CouponService {
                 .build();
 
         if (template.getDiscountCode() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.DOWNLOAD_COUPON.name(),
-                    "mapPage",
-                    "benefit:" + template.getDiscountCode()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_COUPON, "mapPage", "benefit:" + template.getDiscountCode());
         }
 
         if (template.getMembershipCode() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.DOWNLOAD_COUPON.name(),
-                    "mapPage",
-                    "grade:" + template.getMembershipCode()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_COUPON, "mapPage", "grade:" + template.getMembershipCode());
         }
-
 
         try {
             userCouponRepository.save(userCoupon);
@@ -169,21 +158,11 @@ public class CouponServiceImpl implements CouponService {
                 .build();
 
         if (template.getDiscountCode() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.DOWNLOAD_FCFS_COUPON.name(),
-                    "eventPage",
-                    "benefit:" + template.getDiscountCode()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", "benefit:" + template.getDiscountCode());
         }
 
         if (template.getMembershipCode() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.DOWNLOAD_FCFS_COUPON.name(),
-                    "eventPage",
-                    "grade:" + template.getMembershipCode()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", "grade:" + template.getMembershipCode());
         }
 
         try {

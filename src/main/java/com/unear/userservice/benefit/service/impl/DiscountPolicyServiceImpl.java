@@ -58,21 +58,13 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         };
 
         if (requestDto.getFranchiseName() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.BENEFIT_KEYWORD.name(),
-                    "benefitPage",
-                    "keyword:" + requestDto.getFranchiseName()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_KEYWORD, "benefitPage", "keyword:" + requestDto.getFranchiseName());
         }
+
         if (requestDto.getCategoryCode() != null) {
-            userActionLogProducer.sendLog(
-                    String.valueOf(userId),
-                    UserActionType.BENEFIT_CATEGORY.name(),
-                    "benefitPage",
-                    "category:" + requestDto.getCategoryCode()
-            );
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_CATEGORY, "benefitPage", "category:" + requestDto.getCategoryCode());
         }
+
 
 
         return franchiseRepository.findAll(spec, pageable)
@@ -84,14 +76,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         Franchise franchise = franchiseRepository.findWithPoliciesByFranchiseId(franchiseId)
                 .orElseThrow(() -> new BenefitNotFoundException("프랜차이즈 혜택을 찾을 수 없습니다."));
 
-
-        userActionLogProducer.sendLog(
-                String.valueOf(userId),
-                UserActionType.BENEFIT_DETAIL.name(),
-                "benefitPage",
-                "franchiseName:" + franchise.getName()
-        );
-
+        userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", "franchiseName:" + franchise.getName());
 
         return FranchiseDiscountPolicyDetailResponseDto.from(franchise);
     }

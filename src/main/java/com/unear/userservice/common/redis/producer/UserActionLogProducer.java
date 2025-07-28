@@ -1,5 +1,6 @@
 package com.unear.userservice.common.redis.producer;
 
+import com.unear.userservice.common.enums.UserActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -32,4 +33,20 @@ public class UserActionLogProducer {
         redisTemplate.opsForStream()
                 .add(MapRecord.create(STREAM_KEY, data));
     }
+
+    public void logUserAction(Long userId, UserActionType actionType, String screen, String metadata) {
+        if (userId == null) return;
+
+        try {
+            sendLog(
+                    userId.toString(),
+                    actionType.name(),
+                    screen,
+                    metadata
+            );
+        } catch (Exception e) {
+            log.warn("{} 로그 전송 실패", actionType.name(), e);
+        }
+    }
+
 }

@@ -84,45 +84,18 @@ public class PlaceServiceImpl implements PlaceService {
 
         if (requestDto.getBenefitCategory() != null) {
             for (String benefit : requestDto.getBenefitCategory()) {
-                try {
-                    userActionLogProducer.sendLog(
-                            String.valueOf(userId),
-                            UserActionType.PLACE_FILTER.name(),
-                            "mapPage",
-                            "benefit:" + benefit
-                    );
-                } catch (Exception e) {
-                    log.warn("benefitCategory 로그 전송 실패", e);
-                }
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "benefit:" + benefit);
             }
         }
 
         if (requestDto.getCategoryCode() != null) {
             for (String category : requestDto.getCategoryCode()) {
-                try {
-                    userActionLogProducer.sendLog(
-                            String.valueOf(userId),
-                            UserActionType.PLACE_FILTER.name(),
-                            "mapPage",
-                            "category:" + category
-                    );
-                } catch (Exception e) {
-                    log.warn("categoryCode 로그 전송 실패", e);
-                }
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "category:" + category);
             }
         }
 
         if (requestDto.getKeyword() != null) {
-            try {
-                userActionLogProducer.sendLog(
-                        String.valueOf(userId),
-                        UserActionType.PLACE_KEYWORD.name(),
-                        "mapPage",
-                        "keyword:" + requestDto.getKeyword()
-                );
-            } catch (Exception e) {
-                log.warn("PLACE_KEYWORD 로그 전송 실패", e);
-            }
+            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", "keyword:" + requestDto.getKeyword() );
         }
 
 
@@ -222,29 +195,11 @@ public class PlaceServiceImpl implements PlaceService {
         String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
 
         if (place.getCategoryCode() != null) {
-            try {
-                userActionLogProducer.sendLog(
-                        String.valueOf(userId),
-                        UserActionType.VIEW_PLACE_DETAIL.name(),
-                        "mapPage",
-                        "category:" + place.getCategoryCode()
-                );
-            } catch (Exception e) {
-                log.warn("VIEW_PLACE_DETAIL 로그 전송 실패", e);
-            }
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "category:" + place.getCategoryCode());
         }
 
         if (place.getBenefitCategory() != null) {
-            try {
-                userActionLogProducer.sendLog(
-                        String.valueOf(userId),
-                        UserActionType.VIEW_PLACE_DETAIL.name(),
-                        "mapPage",
-                        "benefit:" + place.getBenefitCategory()
-                );
-            } catch (Exception e) {
-                log.warn("VIEW_PLACE_DETAIL 로그 전송 실패", e);
-            }
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "benefit:" + place.getBenefitCategory());
         }
 
         return NearbyPlaceWithCouponsDto.builder()
@@ -284,22 +239,14 @@ public class PlaceServiceImpl implements PlaceService {
             favorite.setDeletedAt(newStatus ? null : LocalDateTime.now());
 
 
-            if (newStatus) { // 즐겨찾기 ON일 때만 로그 전송
-                try {
-                    userActionLogProducer.sendLog(
-                            String.valueOf(userId),
-                            UserActionType.FAVORITE_ON.name(),
-                            "mapPage",
-                            "category:" + favorite.getPlace().getCategoryCode()
-                    );
-                    userActionLogProducer.sendLog(
-                            String.valueOf(userId),
-                            UserActionType.FAVORITE_ON.name(),
-                            "mapPage",
-                            "benefit:" + favorite.getPlace().getBenefitCategory()
-                    );
-                } catch (Exception e) {
-                    log.warn("즐겨찾기 로그 전송 실패", e);
+            if (newStatus) {
+                Place place = favorite.getPlace();
+                if (place.getCategoryCode() != null) {
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "category:" + place.getCategoryCode());
+                }
+
+                if (place.getBenefitCategory() != null) {
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "benefit:" + place.getBenefitCategory());
                 }
             }
 
