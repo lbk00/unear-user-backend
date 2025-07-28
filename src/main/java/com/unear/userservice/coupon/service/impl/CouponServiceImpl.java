@@ -246,9 +246,10 @@ public class CouponServiceImpl implements CouponService {
 
         PlaceType placeType = PlaceType.fromCode(markerCode);
         if (placeType.isFranchise()) {
-            franchiseDiscountPolicyRepository.findById(template.getDiscountPolicyDetailId()).ifPresent(policy ->
+            franchiseDiscountPolicyRepository.findWithFranchiseById(template.getDiscountPolicyDetailId()).ifPresent(policy ->
                     builder
                             .discountCode(policy.getDiscountCode())
+                            .brandName(policy.getFranchise() != null ? policy.getFranchise().getName() : null)
                             .membershipCode(policy.getMembershipCode())
                             .fixedDiscount(policy.getFixedDiscount())
                             .discountPercent(policy.getDiscountPercent())
