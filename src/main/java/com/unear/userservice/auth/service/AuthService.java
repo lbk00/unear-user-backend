@@ -1,9 +1,6 @@
 package com.unear.userservice.auth.service;
 
-import com.unear.userservice.auth.dto.request.CompleteProfileRequestDto;
-import com.unear.userservice.auth.dto.request.LoginRequestDto;
-import com.unear.userservice.auth.dto.request.ResetPasswordRequestDto;
-import com.unear.userservice.auth.dto.request.SignupRequestDto;
+import com.unear.userservice.auth.dto.request.*;
 import com.unear.userservice.auth.dto.response.LoginResponseDto;
 import com.unear.userservice.auth.dto.response.LogoutResponseDto;
 import com.unear.userservice.auth.dto.response.ProfileUpdateResponseDto;
@@ -31,4 +28,7 @@ public interface AuthService {
     ApiResponse<ProfileUpdateResponseDto> completeOAuthProfile(Long userId, @Valid CompleteProfileRequestDto request);
 
     User getUserFromAccessToken(String accessToken);
+
+    void changePassword(Long userId, ChangePasswordRequestDto dto); // 비밀번호 변경
+
 }

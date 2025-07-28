@@ -1,9 +1,6 @@
 package com.unear.userservice.auth.controller;
 
-import com.unear.userservice.auth.dto.request.CompleteProfileRequestDto;
-import com.unear.userservice.auth.dto.request.LoginRequestDto;
-import com.unear.userservice.auth.dto.request.ResetPasswordRequestDto;
-import com.unear.userservice.auth.dto.request.SignupRequestDto;
+import com.unear.userservice.auth.dto.request.*;
 import com.unear.userservice.auth.dto.response.LoginResponseDto;
 import com.unear.userservice.auth.dto.response.LogoutResponseDto;
 import com.unear.userservice.auth.dto.response.ProfileUpdateResponseDto;
@@ -98,6 +95,15 @@ public class AuthController {
         emailService.removeVerified(request.getEmail());
 
         return ResponseEntity.ok(ApiResponse.success("비밀번호가 성공적으로 재설정되었습니다."));
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal CustomUser user,
+            @RequestBody @Valid ChangePasswordRequestDto requestDto
+    ) {
+        authService.changePassword(user.getUser().getUserId(), requestDto);
+        return ResponseEntity.ok().build();
     }
 
 }
