@@ -21,7 +21,7 @@ public class UserActionLogProducer {
     private static final String STREAM_KEY = "stream:user_action_logs";
 
     @Async
-    public void sendLog(String userId, String actionType, String screen , String metadata) {
+    public void sendLog(String userId, String actionType, String screen ,String metadata) {
         try {
             Map<String, String> data = new HashMap<>();
             data.put("userId", userId);
