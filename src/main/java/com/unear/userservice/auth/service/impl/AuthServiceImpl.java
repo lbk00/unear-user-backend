@@ -32,6 +32,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -185,6 +186,7 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
+        // 비밀번호 재설정 완료 후 인증 상태 삭제
         redisTemplate.delete(key);
     }
 
@@ -256,22 +258,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendResetPasswordCode(String email) {
-        // 유저 존재 여부 확인
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
-
-        // 인증 코드 생성 (예: 6자리 랜덤 숫자)
-        String code = String.valueOf((int)(Math.random() * 900000) + 100000); // 100000~999999
-
-        // Redis 저장 (TTL: 5분)
+        SecureRandom random = new SecureRandom();
+        String code = String.format("%06d", random.nextInt(1000000));
         redisTemplate.opsForValue().set(
                 RESET_PASSWORD_PREFIX + email,
                 code,
                 Duration.ofMinutes(5)
         );
-
-        // 이메일 발송
-        emailService.sendResetPasswordCode(email,code);
+        emailService.sendResetPasswordCode(email, code);
     }
 
     @Override
@@ -283,7 +279,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        // 인증 성공 → 인증 상태 저장
+        // 인증 성공 → 인증 상태 저장 (선택)
         redisTemplate.opsForValue().set(RESET_PASSWORD_PREFIX + dto.getEmail(), "true", Duration.ofMinutes(10));
     }
 }
