@@ -185,7 +185,6 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // 비밀번호 재설정 완료 후 인증 상태 삭제
         redisTemplate.delete(key);
     }
 
@@ -244,13 +243,14 @@ public class AuthServiceImpl implements AuthService {
     }
     private String maskEmail(String email) {
         int atIndex = email.indexOf("@");
+        if (atIndex == -1) {
+            throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다");
+        }
         String local = email.substring(0, atIndex);
         String domain = email.substring(atIndex + 1);
-
         int maskLength = Math.max(1, (int) (local.length() * 0.3));
         String visible = local.substring(0, local.length() - maskLength);
         String masked = "*".repeat(maskLength);
-
         return visible + masked + "@" + domain;
     }
 
@@ -271,7 +271,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // 이메일 발송
-        emailService.sendResetPasswordCode(email,code); // 필요시 새로 정의
+        emailService.sendResetPasswordCode(email,code);
     }
 
     @Override
@@ -283,7 +283,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        // 인증 성공 → 인증 상태 저장 (선택)
+        // 인증 성공 → 인증 상태 저장
         redisTemplate.opsForValue().set(RESET_PASSWORD_PREFIX + dto.getEmail(), "true", Duration.ofMinutes(10));
     }
 }
