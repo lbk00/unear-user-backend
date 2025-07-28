@@ -35,6 +35,7 @@ public class User {
     private String username;
     private String password;
     private String email;
+    @Column(name = "tel", unique = true)
     private String tel;
     private LocalDateTime birthdate;
     private String gender;
