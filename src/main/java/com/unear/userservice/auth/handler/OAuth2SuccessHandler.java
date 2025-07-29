@@ -33,7 +33,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
 
-    @Value("${app.frontend.base-url:http://localhost:4000}")
+    @Value("${app.frontend.base-url:https://www.unear.site}")
     private String frontendBaseUrl;
 
     @Override
