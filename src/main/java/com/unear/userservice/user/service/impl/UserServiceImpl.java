@@ -116,40 +116,35 @@ public class UserServiceImpl implements UserService {
     @Override
     public MyStatisticsDetailResponseDto getMyStatisticsDetail(Long userId, int year, int month) {
         YearMonth thisMonth = YearMonth.of(year, month);
+        YearMonth lastMonth = thisMonth.minusMonths(1);
+
         String thisMonthStr = thisMonth.toString();
+        String lastMonthStr = lastMonth.toString();
+
         List<UserHistory> thisMonthHistories = userHistoryRepository.findByUserIdAndYearMonth(userId, thisMonthStr);
+        List<UserHistory> lastMonthHistories = userHistoryRepository.findByUserIdAndYearMonth(userId, lastMonthStr);
 
         int thisSpent = thisMonthHistories.stream().mapToInt(UserHistory::getTotalPaymentAmount).sum();
         int thisDiscount = thisMonthHistories.stream().mapToInt(UserHistory::getTotalDiscountAmount).sum();
-
-        YearMonth lastMonth = thisMonth.minusMonths(1);
-        String lastMonthStr = lastMonth.toString();
-        List<UserHistory> lastMonthHistories = userHistoryRepository.findByUserIdAndYearMonth(userId, lastMonthStr);
-
         int lastSpent = lastMonthHistories.stream().mapToInt(UserHistory::getTotalPaymentAmount).sum();
         int lastDiscount = lastMonthHistories.stream().mapToInt(UserHistory::getTotalDiscountAmount).sum();
 
-        double spentChangeRatio = (lastSpent != 0)
-                ? Math.round(((thisSpent - lastSpent) * 1000.0 / lastSpent)) / 10.0
-                : 0.0;
+        double spentChangeRatio = calculateChangeRatio(thisSpent, lastSpent);
+        double discountChangeRatio = calculateChangeRatio(thisDiscount, lastDiscount);
 
-        double discountChangeRatio = (lastDiscount != 0)
-                ? Math.round(((thisDiscount - lastDiscount) * 1000.0 / lastDiscount)) / 10.0
-                : 0.0;
+        Map<String, Integer> discountPerCategory = thisMonthHistories.stream()
+                .collect(Collectors.groupingBy(
+                        UserHistory::getPlaceCategory,
+                        Collectors.summingInt(UserHistory::getTotalDiscountAmount)
+                ));
 
-        Map<String, Integer> discountPerCategory = new HashMap<>();
-        for (UserHistory history : thisMonthHistories) {
-            String category = history.getPlaceCategory();
-            discountPerCategory.merge(category, history.getTotalDiscountAmount(), Integer::sum);
-        }
-
-        Map<String, Double> discountCategoryRatio = new HashMap<>();
-        for (Map.Entry<String, Integer> entry : discountPerCategory.entrySet()) {
-            double ratio = (thisDiscount > 0)
-                    ? Math.round(entry.getValue() * 1000.0 / thisDiscount) / 10.0
-                    : 0.0;
-            discountCategoryRatio.put(entry.getKey(), ratio);
-        }
+        Map<String, Double> discountCategoryRatio = discountPerCategory.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> thisDiscount > 0
+                                ? Math.round(entry.getValue() * 1000.0 / thisDiscount) / 10.0
+                                : 0.0
+                ));
 
         return new MyStatisticsDetailResponseDto(
                 thisSpent,
@@ -160,6 +155,13 @@ public class UserServiceImpl implements UserService {
                 discountChangeRatio
         );
     }
+
+    private double calculateChangeRatio(int current, int previous) {
+        if (previous == 0) return 0.0;
+        return Math.round(((current - previous) * 100.0 / previous) * 10) / 10.0;
+    }
+
+
 
 
 
