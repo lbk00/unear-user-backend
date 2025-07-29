@@ -86,10 +86,16 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("usedAt").descending());
         Page<UserHistory> histories = userHistoryRepository.findByUser_UserId(userId, pageable);
 
+        List<Long> placeIds = histories.stream()
+                .map(UserHistory::getPlaceId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, String> placeNameMap = placeRepository.findAllById(placeIds).stream()
+                .collect(Collectors.toMap(Place::getPlaceId, Place::getPlaceName));
+
         return histories.map(h -> {
-            String placeName = placeRepository.findById(h.getPlaceId())
-                    .map(Place::getPlaceName)
-                    .orElse(null);
+            String placeName = placeNameMap.getOrDefault(h.getPlaceId(), null);
 
             return UserHistoryResponseDto.builder()
                     .placeName(placeName)
@@ -105,6 +111,7 @@ public class UserServiceImpl implements UserService {
                     .build();
         });
     }
+
 
     @Override
     public MyStatisticsDetailResponseDto getMyStatisticsDetail(Long userId, int year, int month) {
