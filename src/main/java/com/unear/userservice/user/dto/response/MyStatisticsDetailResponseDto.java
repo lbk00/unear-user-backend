@@ -3,6 +3,7 @@ package com.unear.userservice.user.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -13,9 +14,9 @@ public class MyStatisticsDetailResponseDto {
 
     private Integer totalDiscount;
 
-    private Map<String, Integer> discountByCategory;
+    private Map<String, Integer> discountByCategory = new HashMap<>();
 
-    private Map<String, Double> discountCategoryRatio;
+    private Map<String, Double> discountCategoryRatio = new HashMap<>();
 
     private double spentChangeRatio;
 
