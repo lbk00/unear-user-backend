@@ -8,6 +8,7 @@ import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.PlaceNotFoundException;
 import com.unear.userservice.common.exception.exception.UserNotFoundException;
 import com.unear.userservice.common.redis.producer.UserActionLogProducer;
+import com.unear.userservice.common.util.LogMetadataUtils;
 import com.unear.userservice.coupon.dto.response.CouponResponseDto;
 import com.unear.userservice.coupon.entity.CouponTemplate;
 import com.unear.userservice.coupon.entity.UserCoupon;
@@ -81,22 +82,33 @@ public class PlaceServiceImpl implements PlaceService {
                 ? favoritePlaceRepository.findPlaceIdsByUserId(userId)
                 : Collections.emptySet();
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
+
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
         if (requestDto.getBenefitCategory() != null) {
             for (String benefit : requestDto.getBenefitCategory()) {
-                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "benefit:" + benefit);
+                Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+                metadata.put("benefit", benefit);
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", metadata);
             }
         }
 
         if (requestDto.getCategoryCode() != null) {
             for (String category : requestDto.getCategoryCode()) {
-                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", "category:" + category);
+                Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+                metadata.put("category", category);
+                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", metadata);
             }
         }
 
         if (requestDto.getKeyword() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", "keyword:" + requestDto.getKeyword() );
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("keyword", requestDto.getKeyword());
+            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", metadata);
         }
+
 
 
         return places.stream()
@@ -194,12 +206,22 @@ public class PlaceServiceImpl implements PlaceService {
 
         String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
 
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
+
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
+
         if (place.getCategoryCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "category:" + place.getCategoryCode());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("category", place.getCategoryCode());
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", metadata);
         }
 
         if (place.getBenefitCategory() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", "benefit:" + place.getBenefitCategory());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("benefit", place.getBenefitCategory());
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", metadata);
         }
 
         return NearbyPlaceWithCouponsDto.builder()
@@ -239,14 +261,24 @@ public class PlaceServiceImpl implements PlaceService {
             favorite.setDeletedAt(newStatus ? null : LocalDateTime.now());
 
 
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
+
+            Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
+
             if (newStatus) {
                 Place place = favorite.getPlace();
+
                 if (place.getCategoryCode() != null) {
-                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "category:" + place.getCategoryCode());
+                    Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+                    metadata.put("category", place.getCategoryCode());
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", metadata);
                 }
 
                 if (place.getBenefitCategory() != null) {
-                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", "benefit:" + place.getBenefitCategory());
+                    Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+                    metadata.put("benefit", place.getBenefitCategory());
+                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", metadata);
                 }
             }
 
