@@ -6,6 +6,7 @@ import com.unear.userservice.auth.handler.OAuth2SuccessHandler;
 import com.unear.userservice.auth.service.impl.CustomOAuth2UserService;
 import com.unear.userservice.auth.service.impl.GoogleOAuth2UserService;
 import com.unear.userservice.auth.service.impl.KakaoOAuth2UserService;
+import com.unear.userservice.common.internal.InternalKeyAuthFilter;
 import com.unear.userservice.common.jwt.JwtAuthenticationFilter;
 import com.unear.userservice.common.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class SecurityConfig {
     private final KakaoOAuth2UserService kakaoOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
+    private final InternalKeyAuthFilter internalKeyAuthFilter;
 
     private static final String[] WHITE_LIST = {
             "/auth/login",
@@ -93,6 +95,7 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
                 )
+                .addFilterBefore(internalKeyAuthFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
