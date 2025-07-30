@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PosNotificationEventRequest {
     private Long userId;
-    private Long stampOrder;
+    private int stampOrder;
     private PosNotificationType type;
     private String message;
     private Long relatedPlaceId;

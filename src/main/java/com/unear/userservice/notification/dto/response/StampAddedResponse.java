@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class StampAddedResponse {
     private PosNotificationType type;
     private String message;
-    private Long stampOrder;
+    private int stampOrder;
     private Long relatedPlaceId;
     private String relatedPlaceName;
 
