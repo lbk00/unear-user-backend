@@ -26,4 +26,6 @@ public interface EventPlaceRepository extends JpaRepository<EventPlace, Long> {
         WHERE ep.event.unearEventId = :eventId
     """)
     List<EventPlace> findByEventPlace(@Param("eventId") Long eventId);
+
+    List<EventPlace> findByEvent_UnearEventId(Long eventId);
 }

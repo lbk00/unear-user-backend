@@ -1,7 +1,7 @@
 package com.unear.userservice.stamp.service;
 
-import com.unear.userservice.stamp.dto.response.StampStatusResponseDto;
+import com.unear.userservice.stamp.dto.response.EventStampResponseDto;
 
 public interface StampService {
-    StampStatusResponseDto getStampStatus(Long userId, Long eventId);
+    EventStampResponseDto getMyStampsForEvent(Long userId, Long eventId);
 }

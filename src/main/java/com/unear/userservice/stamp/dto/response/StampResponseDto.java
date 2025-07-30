@@ -1,33 +1,26 @@
 package com.unear.userservice.stamp.dto.response;
 
-import com.unear.userservice.common.enums.EventType;
 import com.unear.userservice.stamp.entity.Stamp;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class StampResponseDto {
     private Long stampId;
-    private String placeName;
-    private EventType eventCode;
+    private String placeName;       // 예: 성수동 팝업스토어
+    private String eventCode;       // 예: REQUIRE, GENERAL
     private LocalDateTime stampedAt;
 
     public static StampResponseDto from(Stamp stamp) {
-        if (stamp == null || stamp.getEventPlace() == null) {
-            throw new IllegalArgumentException("Stamp and EventPlace cannot be null");
-        }
-        return new StampResponseDto(
-                stamp.getStampId(),
-                stamp.getPlaceName(),
-                stamp.getEventPlace().getEventCode(),
-                stamp.getStampedAt()
-        );
+        return StampResponseDto.builder()
+                .stampId(stamp.getStampId())
+                .placeName(stamp.getPlaceName())
+                .eventCode(stamp.getEventCode())
+                .stampedAt(stamp.getStampedAt())
+                .build();
     }
 }
