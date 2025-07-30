@@ -60,6 +60,8 @@ jobs:
             echo "REDIS_PORT=6379" >> .env
             echo "REDIS_HOST=redis" >> .env
 
+            echo "INTERNAL_KEY=${{ secrets.INTERNAL_KEY }}" >> .env
+
             docker pull 1seyoung/unear-app:develop
             docker-compose down app
             docker-compose -f docker-compose.yml up -d app
