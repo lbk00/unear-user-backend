@@ -1,5 +1,6 @@
 package com.unear.userservice.stamp.controller;
 
+import com.unear.userservice.common.docs.stamp.StampApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
 import com.unear.userservice.common.security.CustomUser;
 import com.unear.userservice.stamp.dto.response.EventStampResponseDto;
@@ -19,6 +20,7 @@ public class StampController {
 
     private final StampService stampService;
 
+    @StampApiDocs.GetMyStampStatus
     @GetMapping("/events/{eventId}/me")
     public ResponseEntity<ApiResponse<EventStampResponseDto>> getMyStampsForEvent(
             @AuthenticationPrincipal CustomUser user,
