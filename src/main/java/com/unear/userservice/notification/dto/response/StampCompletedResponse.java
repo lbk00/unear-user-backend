@@ -1,7 +1,7 @@
 package com.unear.userservice.notification.dto.response;
 
 import com.unear.userservice.common.enums.PosNotificationType;
-import com.unear.userservice.notification.dto.request.PosEventRequest;
+import com.unear.userservice.notification.dto.request.PosNotificationEventRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +18,7 @@ public class StampCompletedResponse {
     private String relatedPlaceName;
 
 
-    public static StampCompletedResponse from(PosEventRequest request) {
+    public static StampCompletedResponse from(PosNotificationEventRequest request) {
         return StampCompletedResponse.builder()
                 .type(request.getType())
                 .message(request.getMessage())

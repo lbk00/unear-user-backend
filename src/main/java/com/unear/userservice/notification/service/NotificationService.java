@@ -1,7 +1,7 @@
 package com.unear.userservice.notification.service;
 
-import com.unear.userservice.notification.dto.request.PosEventRequest;
+import com.unear.userservice.notification.dto.request.PosNotificationEventRequest;
 
 public interface NotificationService {
-    void sendNotification(PosEventRequest request);
+    void sendNotification(PosNotificationEventRequest request);
 }

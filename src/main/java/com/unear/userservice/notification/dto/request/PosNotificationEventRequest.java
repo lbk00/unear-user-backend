@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PosEventRequest {
+public class PosNotificationEventRequest {
     private Long userId;
     private Long stampOrder;
     private PosNotificationType type;

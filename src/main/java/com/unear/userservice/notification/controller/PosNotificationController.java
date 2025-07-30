@@ -1,7 +1,7 @@
 package com.unear.userservice.notification.controller;
 
 import com.unear.userservice.common.response.ApiResponse;
-import com.unear.userservice.notification.dto.request.PosEventRequest;
+import com.unear.userservice.notification.dto.request.PosNotificationEventRequest;
 import com.unear.userservice.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +18,7 @@ public class PosNotificationController {
 
 
     @PostMapping("/notify")
-    public ApiResponse<String> notify(@RequestBody PosEventRequest request) {
+    public ApiResponse<String> notify(@RequestBody PosNotificationEventRequest request) {
         notificationService.sendNotification(request);
         return ApiResponse.success("포스 알림 전송 완료");
     }

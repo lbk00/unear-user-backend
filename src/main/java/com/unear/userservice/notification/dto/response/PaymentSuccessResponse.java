@@ -1,7 +1,7 @@
 package com.unear.userservice.notification.dto.response;
 
 import com.unear.userservice.common.enums.PosNotificationType;
-import com.unear.userservice.notification.dto.request.PosEventRequest;
+import com.unear.userservice.notification.dto.request.PosNotificationEventRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +20,7 @@ public class PaymentSuccessResponse {
     private Long finalAmount;
 
 
-    public static PaymentSuccessResponse from(PosEventRequest request) {
+    public static PaymentSuccessResponse from(PosNotificationEventRequest request) {
         return PaymentSuccessResponse.builder()
                 .type(request.getType())
                 .message(request.getMessage())
