@@ -43,9 +43,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final GoogleOAuth2UserService googleOAuth2UserService;
-    private final KakaoOAuth2UserService kakaoOAuth2UserService;
-    private final NaverOAuth2UserService naverOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final InternalKeyValidator internalKeyValidator;
