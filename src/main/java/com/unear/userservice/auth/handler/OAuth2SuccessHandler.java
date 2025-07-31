@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -58,11 +59,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         response.addCookie(cookie);
 
-        log.info("onAuthenticationSuccess 리다이렉트 지점 ");
-        System.out.println("onAuthenticationSuccess 리다이렉트 지점 ");
+        String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
 
-        String redirectUrl = String.format("%s/login/oauth2/code/google?accessToken=%s",
-                frontendBaseUrl, accessToken);
+        String redirectUrl = String.format("%s/login/oauth2/code/%s?accessToken=%s",
+                frontendBaseUrl, registrationId, accessToken);
 
         response.sendRedirect(redirectUrl);
     }
