@@ -35,7 +35,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final RefreshTokenService refreshTokenService;
 
 
-    @Value("${app.frontend.base-url:https://www.unear.site}")
+//    @Value("${app.frontend.base-url:https://www.unear.site}")
+    @Value("${app.frontend.base-url:http://localhost:4000}")
     private String frontendBaseUrl;
 
     @Override
