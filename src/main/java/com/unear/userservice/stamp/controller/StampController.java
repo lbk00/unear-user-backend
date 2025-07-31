@@ -3,10 +3,9 @@ package com.unear.userservice.stamp.controller;
 import com.unear.userservice.common.docs.stamp.StampApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
 import com.unear.userservice.common.security.CustomUser;
-import com.unear.userservice.stamp.dto.response.EventStampResponseDto;
+import com.unear.userservice.stamp.dto.response.StampStatusResponseDto;
 import com.unear.userservice.stamp.service.StampService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,12 +20,11 @@ public class StampController {
     private final StampService stampService;
 
     @StampApiDocs.GetMyStampStatus
-    @GetMapping("/events/{eventId}/me")
-    public ResponseEntity<ApiResponse<EventStampResponseDto>> getMyStampsForEvent(
+    @GetMapping("events/{eventId}/me")
+    public ApiResponse<StampStatusResponseDto> getMyStamps(
             @AuthenticationPrincipal CustomUser user,
             @PathVariable Long eventId
     ) {
-        EventStampResponseDto response = stampService.getMyStampsForEvent(user.getId(), eventId);
-        return ResponseEntity.ok(ApiResponse.success("스탬프 조회 성공", response));
+        return ApiResponse.success(stampService.getMyStampsForEvent(user.getId(), eventId));
     }
 }

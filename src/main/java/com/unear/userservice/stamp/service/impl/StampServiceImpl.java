@@ -1,12 +1,12 @@
 package com.unear.userservice.stamp.service.impl;
 
+import com.unear.userservice.common.exception.exception.EventNotFoundException;
 import com.unear.userservice.event.entity.UnearEvent;
 import com.unear.userservice.event.repository.EventRepository;
-import com.unear.userservice.place.entity.EventPlace;
 import com.unear.userservice.place.repository.EventPlaceRepository;
 import com.unear.userservice.stamp.domain.EventStampPolicy;
 import com.unear.userservice.stamp.domain.StampCollection;
-import com.unear.userservice.stamp.dto.response.EventStampResponseDto;
+import com.unear.userservice.stamp.dto.response.StampStatusResponseDto;
 import com.unear.userservice.stamp.entity.Stamp;
 import com.unear.userservice.stamp.repository.StampRepository;
 import com.unear.userservice.stamp.service.StampService;
@@ -26,17 +26,15 @@ public class StampServiceImpl implements StampService {
     private final StampRepository stampRepository;
 
     @Override
-    public EventStampResponseDto getMyStampsForEvent(Long userId, Long eventId) {
+    public StampStatusResponseDto getMyStampsForEvent(Long userId, Long eventId) {
         UnearEvent event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("이벤트가 존재하지 않습니다"));
+                .orElseThrow(() -> new EventNotFoundException(eventId));
 
-        List<EventPlace> eventPlaces = eventPlaceRepository.findByEvent_UnearEventId(eventId);
-        List<Stamp> userStamps = stampRepository.findByUser_UserIdAndEventPlace_Event_UnearEventId(userId, eventId);
+        List<Stamp> stamps = stampRepository.findByUser_UserIdAndEvent_UnearEventId(userId, eventId);
 
-        StampCollection collection = new StampCollection(userStamps);
-        EventStampPolicy policy = new EventStampPolicy();
-        boolean available = policy.isSatisfiedBy(collection);
+        EventStampPolicy policy = EventStampPolicy.of(event.getEventPlaces());
+        StampCollection collection = StampCollection.of(stamps, policy);
 
-        return EventStampResponseDto.of(eventPlaces, userStamps, available);
+        return collection.toResponseDto();  // 최종 응답
     }
 }

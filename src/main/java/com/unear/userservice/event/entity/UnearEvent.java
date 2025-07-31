@@ -3,6 +3,7 @@ package com.unear.userservice.event.entity;
 import com.unear.userservice.coupon.entity.CouponTemplate;
 import com.unear.userservice.place.entity.EventPlace;
 import com.unear.userservice.roulette.entity.RouletteResult;
+import com.unear.userservice.stamp.entity.Stamp;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +45,9 @@ public class UnearEvent {
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     private List<CouponTemplate> couponTemplates = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event")
+    private List<Stamp> stamps = new ArrayList<>();
 
 }
 
