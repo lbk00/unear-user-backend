@@ -93,3 +93,6 @@ logging:
   level:
     root: INFO
     com.unear: INFO
+
+internal:
+  key: ${INTERNAL_KEY}
