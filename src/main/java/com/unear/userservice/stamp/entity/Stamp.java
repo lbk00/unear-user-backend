@@ -1,5 +1,6 @@
 package com.unear.userservice.stamp.entity;
 
+import com.unear.userservice.event.entity.UnearEvent;
 import com.unear.userservice.place.entity.EventPlace;
 import com.unear.userservice.user.entity.User;
 import jakarta.persistence.*;
@@ -27,5 +28,9 @@ public class Stamp {
     private LocalDateTime stampedAt;
     private String eventCode;
     private String placeName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unear_event_id")
+    private UnearEvent event;
 }
 

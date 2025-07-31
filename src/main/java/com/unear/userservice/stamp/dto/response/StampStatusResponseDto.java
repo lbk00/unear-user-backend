@@ -24,4 +24,5 @@ public class StampStatusResponseDto {
 
         return new StampStatusResponseDto(dtoList, rouletteAvailable);
     }
+
 }
