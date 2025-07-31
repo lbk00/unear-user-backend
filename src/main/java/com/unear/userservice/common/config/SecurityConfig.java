@@ -98,8 +98,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
                 )
-                .addFilterBefore(new InternalKeyAuthFilter(internalKeyValidator), JwtAuthenticationFilter.class)
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new InternalKeyAuthFilter(internalKeyValidator), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), InternalKeyAuthFilter.class)
                 .build();
     }
 
