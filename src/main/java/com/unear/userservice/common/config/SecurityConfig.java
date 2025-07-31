@@ -73,11 +73,7 @@ public class SecurityConfig {
 
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
-        return new DelegatingOAuth2UserService<>(List.of(
-                googleOAuth2UserService,
-                kakaoOAuth2UserService,
-                naverOAuth2UserService
-        ));
+        return customOAuth2UserService;
     }
 
     @Bean
