@@ -1,6 +1,7 @@
 package com.unear.userservice.auth.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.unear.userservice.common.enums.LoginProvider;
 import com.unear.userservice.user.entity.User;
 import com.unear.userservice.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = (String) kakaoAccount.get("email");
         String name = (String) profile.get("nickname");
+        String kakaoId = String.valueOf(attributes.get("id"));
 
         if (email == null) {
             throw new OAuth2AuthenticationException("카카오 계정에서 이메일 정보를 가져올 수 없습니다. 이메일 제공에 동의했는지 확인해주세요.");
@@ -49,6 +51,8 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
                                 .email(email)
                                 .username(name)
                                 .password(null)
+                                .provider(LoginProvider.KAKAO)
+                                .providerId(kakaoId)
                                 .tel(null)
                                 .birthdate(null)
                                 .gender(null)
