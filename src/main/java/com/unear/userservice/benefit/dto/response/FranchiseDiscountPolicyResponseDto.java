@@ -14,9 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 public class FranchiseDiscountPolicyResponseDto {
 
+    private Long franchiseId;
     private String franchiseName;
     private String franchiseImageUrl;
     private String categoryCode;
+    private String description;
 
     private boolean hasVvip;
     private boolean hasVip;
@@ -29,9 +31,11 @@ public class FranchiseDiscountPolicyResponseDto {
                 .toList();
 
         return new FranchiseDiscountPolicyResponseDto(
+                franchise.getFranchiseId(),
                 franchise.getName(),
                 franchise.getImageUrl(),
                 franchise.getCategoryCode(),
+                franchise.getDescription(),
                 membershipGrades.contains(MembershipGrade.VVIP),
                 membershipGrades.contains(MembershipGrade.VIP),
                 membershipGrades.contains(MembershipGrade.BASIC)

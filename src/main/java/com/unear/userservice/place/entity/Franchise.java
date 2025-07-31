@@ -23,6 +23,7 @@ public class Franchise {
     private String name;
     private String categoryCode;
     private String imageUrl;
+    private String description;
 
     @OneToMany(mappedBy = "franchise", cascade = CascadeType.ALL)
     private List<Place> places = new ArrayList<>();
