@@ -17,16 +17,18 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final KakaoOAuth2UserService kakaoOAuth2UserService;
+    private final NaverOAuth2UserService naverOAuth2UserService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-        log.info("{} CustomOAuth2UserService 분기 지점" ,registrationId);
-        System.out.println("CustomOAuth2UserService 분기 지점");
+        log.info("{} CustomOAuth2UserService 분기 지점", registrationId);
+
         return switch (registrationId) {
             case "google" -> googleOAuth2UserService.loadUser(userRequest);
             case "kakao" -> kakaoOAuth2UserService.loadUser(userRequest);
+            case "naver" -> naverOAuth2UserService.loadUser(userRequest);
             default -> throw new OAuth2AuthenticationException("Unsupported OAuth2 provider: " + registrationId);
         };
     }

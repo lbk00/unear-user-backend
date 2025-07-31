@@ -14,7 +14,8 @@ import java.io.IOException;
 @Component
 public class OAuth2FailureHandler implements AuthenticationFailureHandler {
 
-    private static final String REDIRECT_URL = "https://www.unear.site/login";
+    @Value("${app.frontend.login-url:https://www.unear.site/login}")
+    private String loginRedirectUrl;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
@@ -22,7 +23,7 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
                                         AuthenticationException exception) throws IOException {
         log.error("OAuth2 로그인 실패: {}", exception.getMessage(), exception);
 
-        response.sendRedirect(REDIRECT_URL);
+        response.sendRedirect(loginRedirectUrl);
     }
 }
 
