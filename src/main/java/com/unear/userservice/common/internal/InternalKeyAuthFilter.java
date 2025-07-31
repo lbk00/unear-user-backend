@@ -10,8 +10,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component
-@Order(1)
+
 public class InternalKeyAuthFilter extends OncePerRequestFilter {
 
     private static final String INTERNAL_KEY_HEADER = "X-INTERNAL-KEY";

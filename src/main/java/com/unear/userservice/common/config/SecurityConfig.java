@@ -7,7 +7,9 @@ import com.unear.userservice.auth.service.impl.CustomOAuth2UserService;
 import com.unear.userservice.auth.service.impl.GoogleOAuth2UserService;
 import com.unear.userservice.auth.service.impl.KakaoOAuth2UserService;
 import com.unear.userservice.common.internal.InternalKeyAuthFilter;
+import com.unear.userservice.common.internal.InternalKeyValidator;
 import com.unear.userservice.common.jwt.JwtAuthenticationFilter;
+import com.unear.userservice.common.jwt.JwtTokenProvider;
 import com.unear.userservice.common.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -39,13 +41,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final KakaoOAuth2UserService kakaoOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
-    private final InternalKeyAuthFilter internalKeyAuthFilter;
+    private final InternalKeyValidator internalKeyValidator;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService userDetailsService;
 
     private static final String[] WHITE_LIST = {
             "/auth/login",
@@ -95,8 +98,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
                 )
-                .addFilterBefore(internalKeyAuthFilter, JwtAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new InternalKeyAuthFilter(internalKeyValidator), JwtAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
