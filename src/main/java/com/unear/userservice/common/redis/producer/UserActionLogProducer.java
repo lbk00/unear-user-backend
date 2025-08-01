@@ -27,7 +27,7 @@ public class UserActionLogProducer {
     @Async
     public void sendLog(String userId, String actionType, String screen ,String metadata) {
         try {
-            String dedupKey = String.format("logdedup:%s:%s:%s:%s", userId, actionType, screen, metadata.hashCode());
+            String dedupKey = String.format("logdedup:%s:%s:%s:%s", userId, actionType, screen, Math.abs(metadata.hashCode()) % 1000000);
 
             Boolean isNew = redisTemplate.opsForValue().setIfAbsent(dedupKey, "1", Duration.ofSeconds(2));
             if (Boolean.FALSE.equals(isNew)) {
