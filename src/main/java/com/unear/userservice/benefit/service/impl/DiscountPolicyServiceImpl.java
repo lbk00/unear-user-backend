@@ -69,10 +69,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
 
-        Map<String, Object> baseMetadata = new LinkedHashMap<>();
-        baseMetadata.put("gender", user.getGender());
-        baseMetadata.put("ageGroup", LogMetadataUtils.getAgeGroup(user.getBirthdate().toLocalDate()));
-        baseMetadata.put("grade", user.getMembershipCode());
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
         if (requestDto.getFranchiseName() != null) {
             Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
