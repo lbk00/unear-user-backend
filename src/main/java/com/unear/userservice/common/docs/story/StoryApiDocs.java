@@ -1,5 +1,6 @@
 package com.unear.userservice.common.docs.story;
 
+import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
 import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,4 +95,43 @@ public class StoryApiDocs {
     )
     @SecurityRequirement(name = "BearerAuth")
     public @interface GetHistory {}
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Operation(
+            summary = "이번 달 스토리 조회",
+            description = "한 줄 멘트 + 대표 결제 내역 + 일러스트 이미지를 포함한 스토리 상세 화면에 사용됩니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "이번 달 스토리 응답",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = StoryCurrentResponseDto.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "스토리 상세 예시",
+                                    value = """
+                                            {
+                                              "success": true,
+                                              "data": {
+                                                "month": "2025-07",
+                                                "comment": "맛있는 음식 도착 소식에, 행복해지는 순간이 찾아왔어.",
+                                                "imageUrl": "https://cdn.unear.site/story/current/zzep_full.png",
+                                                "representativeLog": {
+                                                  "date": "2025-07-15",
+                                                  "storeName": "맥도날드 치즈버거",
+                                                  "amount": 14200,
+                                                  "logoUrl": "https://cdn.unear.site/logo/mcdonalds.png"
+                                                }
+                                              }
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    public @interface GetCurrent {}
 }
