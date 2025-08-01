@@ -46,4 +46,50 @@ public class StoryApiDocs {
     )
     @SecurityRequirement(name = "BearerAuth")
     public @interface GetDiagnosis {}
+
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Operation(
+            summary = "소비 히스토리 조회",
+            description = "사용자의 최근 3달 소비 내역을 기반으로 스토리와 코멘트를 반환합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "소비 히스토리 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = StoryDiagnosisResponseDto.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "소비 히스토리 조회 예시",
+                                    summary = "조회 결과 예시",
+                                    value = """
+                                            {
+                                                "resultCode": 200,
+                                                "codeName": "SUCCESS",
+                                                "message": "요청이 성공적으로 처리되었습니다.",
+                                                "data": [
+                                                    {
+                                                        "month": "2025-08",
+                                                        "type": "쩝쩝박사",
+                                                        "comment": "축제의 즐거움은 맛에 있다고 믿는 당신!",
+                                                        "imageUrl": "https://cdn.unear.site/story/type/zzep.png"
+                                                    },
+                                                    {
+                                                        "month": "2025-07",
+                                                        "type": "알뜰소비러",
+                                                        "comment": "혜택은 놓치지 않는다! 알뜰하고 계획적인 당신!",
+                                                        "imageUrl": "https://cdn.unear.site/story/type/saver.png"
+                                                    }
+                                                ]
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    public @interface GetHistory {}
 }
