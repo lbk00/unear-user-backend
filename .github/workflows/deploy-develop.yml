@@ -62,7 +62,7 @@ jobs:
 
 
             echo "REDIS_PORT=6379" >> .env
-            echo "REDIS_HOST=redis" >> .env
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
 
             echo "INTERNAL_KEY=${{ secrets.INTERNAL_KEY }}" >> .env
 
