@@ -1,6 +1,8 @@
 package com.unear.userservice.common.redis.producer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unear.userservice.common.enums.UserActionType;
+import com.unear.userservice.common.util.LogMetadataUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -17,6 +19,7 @@ import java.util.Map;
 public class UserActionLogProducer {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     private static final String STREAM_KEY = "stream:user_action_logs";
 
@@ -38,18 +41,16 @@ public class UserActionLogProducer {
             }
     }
 
-    public void logUserAction(Long userId, UserActionType actionType, String screen, String metadata) {
+    public void logUserAction(Long userId, UserActionType actionType, String screen, Map<String, Object> metadataMap) {
         if (userId == null) return;
         try {
-            sendLog(
-                    userId.toString(),
-                    actionType.name(),
-                    screen,
-                    metadata
-            );
+            Map<String, Object> cleanMetadata = LogMetadataUtils.sanitizeMapValues(metadataMap);
+            String metadataJson = objectMapper.writeValueAsString(cleanMetadata);
+            sendLog(userId.toString(), actionType.name(), screen, metadataJson);
         } catch (Exception e) {
             log.warn("{} 로그 전송 실패", actionType.name(), e);
         }
     }
+
 
 }

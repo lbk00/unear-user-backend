@@ -5,13 +5,18 @@ import com.unear.userservice.benefit.dto.response.GeneralDiscountPolicyDetailRes
 import com.unear.userservice.benefit.dto.response.FranchiseDiscountPolicyDetailResponseDto;
 import com.unear.userservice.benefit.dto.response.FranchiseDiscountPolicyResponseDto;
 import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
+import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.FranchiseRepository;
 import com.unear.userservice.benefit.service.DiscountPolicyService;
 import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.BenefitNotFoundException;
+import com.unear.userservice.common.exception.exception.UserNotFoundException;
 import com.unear.userservice.common.redis.producer.UserActionLogProducer;
+import com.unear.userservice.common.util.LogMetadataUtils;
 import com.unear.userservice.place.entity.Franchise;
+import com.unear.userservice.user.entity.User;
+import com.unear.userservice.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,7 +27,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +38,8 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
     private final FranchiseRepository franchiseRepository;
     private final UserActionLogProducer userActionLogProducer;
+    private final UserRepository userRepository;
+    private final FranchiseDiscountPolicyRepository franchiseDiscountPolicyRepository;
 
     @Override
     public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId) {
@@ -57,14 +66,22 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
+
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
+
         if (requestDto.getFranchiseName() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_KEYWORD, "benefitPage", "keyword:" + requestDto.getFranchiseName());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("keyword", requestDto.getFranchiseName());
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_KEYWORD, "benefitPage", metadata);
         }
 
         if (requestDto.getCategoryCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_CATEGORY, "benefitPage", "category:" + requestDto.getCategoryCode());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("category", requestDto.getCategoryCode());
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_CATEGORY, "benefitPage", metadata);
         }
-
 
 
         return franchiseRepository.findAll(spec, pageable)
@@ -76,7 +93,13 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         Franchise franchise = franchiseRepository.findWithPoliciesByFranchiseId(franchiseId)
                 .orElseThrow(() -> new BenefitNotFoundException("프랜차이즈 혜택을 찾을 수 없습니다."));
 
-        userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", "franchiseName:" + franchise.getName());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
+
+        Map<String, Object> metadata = LogMetadataUtils.buildUserBaseMetadata(user);
+        metadata.put("franchiseName", franchise.getName());
+
+        userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", metadata);
 
         return FranchiseDiscountPolicyDetailResponseDto.from(franchise);
     }

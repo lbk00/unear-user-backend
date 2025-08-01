@@ -7,6 +7,7 @@ import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
 import com.unear.userservice.common.enums.*;
 import com.unear.userservice.common.exception.exception.*;
 import com.unear.userservice.common.redis.producer.UserActionLogProducer;
+import com.unear.userservice.common.util.LogMetadataUtils;
 import com.unear.userservice.coupon.dto.response.CouponResponseDto;
 import com.unear.userservice.coupon.dto.response.UserCouponDetailResponseDto;
 import com.unear.userservice.coupon.dto.response.UserCouponListResponseDto;
@@ -116,12 +117,12 @@ public class CouponServiceImpl implements CouponService {
                 .barcodeNumber(generateUniqueBarcode())
                 .build();
 
-        if (template.getDiscountCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_COUPON, "mapPage", "benefit:" + template.getDiscountCode());
-        }
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
-        if (template.getMembershipCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_COUPON, "mapPage", "grade:" + template.getMembershipCode());
+        if (template.getDiscountCode() != null) {
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("benefit", template.getDiscountCode());
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_COUPON, "mapPage", metadata);
         }
 
         try {
@@ -157,13 +158,20 @@ public class CouponServiceImpl implements CouponService {
                 .barcodeNumber(generateUniqueBarcode())
                 .build();
 
+        Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
+
         if (template.getDiscountCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", "benefit:" + template.getDiscountCode());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("benefit", template.getDiscountCode());
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", metadata);
         }
 
         if (template.getMembershipCode() != null) {
-            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", "grade:" + template.getMembershipCode());
+            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+            metadata.put("grade", template.getMembershipCode());
+            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", metadata);
         }
+
 
         try {
             userCouponRepository.save(userCoupon);
