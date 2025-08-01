@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +27,14 @@ public class UserActionLogProducer {
     @Async
     public void sendLog(String userId, String actionType, String screen ,String metadata) {
         try {
+            String dedupKey = String.format("logdedup:%s:%s:%s:%s", userId, actionType, screen, Math.abs(metadata.hashCode()) % 1000000);
+
+            Boolean isNew = redisTemplate.opsForValue().setIfAbsent(dedupKey, "1", Duration.ofSeconds(2));
+            if (Boolean.FALSE.equals(isNew)) {
+                log.info("[중복 로그 차단] userId={}, actionType={}, screen={}", userId, actionType, screen);
+                return;
+            }
+
             Map<String, String> data = new HashMap<>();
             data.put("userId", userId);
             data.put("actionType", actionType);
