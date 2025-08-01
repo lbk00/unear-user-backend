@@ -60,7 +60,8 @@ public class StoryApiDocs {
             description = "소비 히스토리 조회 성공",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = StoryHistoryResponseDto.class),
+                    schema = @Schema(implementation = StoryHistoryResponseDto.class,
+                                     type = "array"),
                     examples = {
                             @ExampleObject(
                                     name = "소비 히스토리 조회 예시",
