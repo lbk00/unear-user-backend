@@ -3,6 +3,7 @@ package com.unear.userservice.story.controller;
 import com.unear.userservice.common.annotation.LoginUser;
 import com.unear.userservice.common.docs.story.StoryApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
+import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
 import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
 import com.unear.userservice.story.service.StoryService;
@@ -32,5 +33,12 @@ public class StoryController {
     public ResponseEntity<ApiResponse<List<StoryHistoryResponseDto>>> getHistory(@LoginUser User user) {
         List<StoryHistoryResponseDto> history = storyService.getHistory(user.getUserId());
         return ResponseEntity.ok(ApiResponse.success(history));
+    }
+
+    @GetMapping("/current")
+    @StoryApiDocs.GetCurrent
+    public ResponseEntity<ApiResponse<StoryCurrentResponseDto>> getCurrentStory(@LoginUser User user) {
+        StoryCurrentResponseDto response = storyService.getCurrent(user.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

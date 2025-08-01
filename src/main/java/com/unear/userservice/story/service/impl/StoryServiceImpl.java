@@ -2,6 +2,7 @@ package com.unear.userservice.story.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
 import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
 import com.unear.userservice.story.service.StoryService;
@@ -11,6 +12,7 @@ import com.unear.userservice.story.vo.UserAnalysisResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -61,5 +63,24 @@ public class StoryServiceImpl implements StoryService {
                         .imageUrl("https://cdn.unear.site/story/type/saver.png")
                         .build()
         );
+    }
+
+    @Override
+    public StoryCurrentResponseDto getCurrent(Long userId) {
+        // 대표 결제 내역
+        StoryCurrentResponseDto.RepresentativeLog repLog =
+                StoryCurrentResponseDto.RepresentativeLog.builder()
+                        .date(LocalDate.of(2025, 7, 15))
+                        .storeName("맥도날드 치즈버거")
+                        .amount(14200)
+                        .logoUrl("https://cdn.unear.site/logo/mcdonalds.png")
+                        .build();
+
+        return StoryCurrentResponseDto.builder()
+                .month(YearMonth.of(2025, 7))
+                .comment("맛있는 음식 도착 소식에, 행복해지는 순간이 찾아왔어.")
+                .imageUrl("https://cdn.unear.site/story/current/zzep_full.png")
+                .representativeLog(repLog)
+                .build();
     }
 }
