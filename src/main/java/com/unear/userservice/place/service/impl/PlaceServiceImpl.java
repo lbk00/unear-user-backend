@@ -3,6 +3,7 @@ package com.unear.userservice.place.service.impl;
 import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
+import com.unear.userservice.common.enums.EventType;
 import com.unear.userservice.common.enums.PlaceType;
 import com.unear.userservice.common.enums.UserActionType;
 import com.unear.userservice.common.exception.exception.PlaceNotFoundException;
@@ -87,26 +88,23 @@ public class PlaceServiceImpl implements PlaceService {
 
         Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
+        Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+
         if (requestDto.getBenefitCategory() != null) {
-            for (String benefit : requestDto.getBenefitCategory()) {
-                Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
-                metadata.put("benefit", benefit);
-                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", metadata);
-            }
+            metadata.put("benefit", requestDto.getBenefitCategory());
+        }
+        if (requestDto.getCategoryCode() != null) {
+            metadata.put("category", requestDto.getCategoryCode());
         }
 
-        if (requestDto.getCategoryCode() != null) {
-            for (String category : requestDto.getCategoryCode()) {
-                Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
-                metadata.put("category", category);
-                userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", metadata);
-            }
+        if (metadata.size() > baseMetadata.size()) {
+            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_FILTER, "mapPage", metadata);
         }
 
         if (requestDto.getKeyword() != null) {
-            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
-            metadata.put("keyword", requestDto.getKeyword());
-            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", metadata);
+            Map<String, Object> keywordMetadata = new LinkedHashMap<>(baseMetadata);
+            keywordMetadata.put("keyword", requestDto.getKeyword());
+            userActionLogProducer.logUserAction(userId, UserActionType.PLACE_KEYWORD, "mapPage", keywordMetadata);
         }
 
 
@@ -212,16 +210,32 @@ public class PlaceServiceImpl implements PlaceService {
 
         Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
-        if (place.getCategoryCode() != null) {
+        // 해당 장소가 이벤트 장소라면? 추가 분기
+        // 아니면 기존 클릭수 조회하는거에 분기로?
+        // event_type_code != NONE -> 이벤트 매장
+        if (place.getEventTypeCode() != null && !place.getEventTypeCode().equals(EventType.NONE.name())) {
             Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
-            metadata.put("category", place.getCategoryCode());
-            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", metadata);
+            metadata.put("placeName", place.getPlaceName());
+            metadata.put("address", place.getAddress());
+            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "eventPage", metadata);
         }
 
+
+        Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+        if (place.getCategoryCode() != null) {
+            metadata.put("category", place.getCategoryCode());
+        }
         if (place.getBenefitCategory() != null) {
-            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
             metadata.put("benefit", place.getBenefitCategory());
-            userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "mapPage", metadata);
+        }
+
+        if (metadata.size() > baseMetadata.size()) {
+            userActionLogProducer.logUserAction(
+                    userId,
+                    UserActionType.VIEW_PLACE_DETAIL,
+                    "mapPage",
+                    metadata
+            );
         }
 
         return NearbyPlaceWithCouponsDto.builder()
@@ -269,15 +283,14 @@ public class PlaceServiceImpl implements PlaceService {
             if (newStatus) {
                 Place place = favorite.getPlace();
 
+                Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
                 if (place.getCategoryCode() != null) {
-                    Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
                     metadata.put("category", place.getCategoryCode());
-                    userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", metadata);
                 }
-
                 if (place.getBenefitCategory() != null) {
-                    Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
                     metadata.put("benefit", place.getBenefitCategory());
+                }
+                if (metadata.size() > baseMetadata.size()) {
                     userActionLogProducer.logUserAction(userId, UserActionType.FAVORITE_ON, "mapPage", metadata);
                 }
             }
