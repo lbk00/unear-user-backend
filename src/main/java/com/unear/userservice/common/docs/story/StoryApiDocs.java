@@ -1,6 +1,7 @@
 package com.unear.userservice.common.docs.story;
 
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
+import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
