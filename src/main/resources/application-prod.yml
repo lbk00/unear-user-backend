@@ -88,9 +88,7 @@ spring:
             user-name-attribute: response
   data:
     redis:
-      port: ${REDIS_PORT}
-      host: ${REDIS_HOST}
-      ssl: true
+      url: rediss://${REDIS_HOST}:${REDIS_PORT}
 
 jwt:
   secret: ${JWT_SECRET}
