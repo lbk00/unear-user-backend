@@ -31,7 +31,6 @@ public class UserActionLogProducer {
 
             Boolean isNew = redisTemplate.opsForValue().setIfAbsent(dedupKey, "1", Duration.ofSeconds(2));
             if (Boolean.FALSE.equals(isNew)) {
-                log.info("[중복 로그 차단] userId={}, actionType={}, screen={}", userId, actionType, screen);
                 return;
             }
 
