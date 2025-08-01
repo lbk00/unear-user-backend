@@ -10,11 +10,11 @@ import java.util.List;
 public class StampCollection {
 
     private final List<Stamp> stamps;
-    private final boolean rouletteEnabled;
+    private final boolean rouletteAvailable;
 
-    public StampCollection(List<Stamp> stamps, boolean rouletteEnabled) {
+    public StampCollection(List<Stamp> stamps, boolean rouletteAvailable) {
         this.stamps = stamps;
-        this.rouletteEnabled = rouletteEnabled;
+        this.rouletteAvailable = rouletteAvailable;
     }
 
     public StampCollection(List<Stamp> stamps) {
@@ -28,6 +28,6 @@ public class StampCollection {
 
 
     public StampStatusResponseDto toResponseDto() {
-        return StampStatusResponseDto.of(this.stamps, this.rouletteEnabled);
+        return StampStatusResponseDto.of(this.stamps, this.rouletteAvailable);
     }
 }
