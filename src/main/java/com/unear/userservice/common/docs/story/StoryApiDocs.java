@@ -24,7 +24,7 @@ public class StoryApiDocs {
             description = "소비 진단 결과 조회 성공",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = StoryHistoryResponseDto.class),
+                    schema = @Schema(implementation = StoryDiagnosisResponseDto.class),
                     examples = {
                             @ExampleObject(
                                     name = "AI 소비 진단 예시",
@@ -60,7 +60,7 @@ public class StoryApiDocs {
             description = "소비 히스토리 조회 성공",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = StoryDiagnosisResponseDto.class),
+                    schema = @Schema(implementation = StoryHistoryResponseDto.class),
                     examples = {
                             @ExampleObject(
                                     name = "소비 히스토리 조회 예시",
