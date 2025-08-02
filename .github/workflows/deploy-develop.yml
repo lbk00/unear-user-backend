@@ -41,7 +41,25 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-southeast-2
 
-    # 5. CodeDeploy 배포 실행 (기존 S3 패키지 사용)
+    # 5. 기존 배포 상태 확인 및 대기
+    - name: Check existing deployments
+      run: |
+        echo "Checking for active deployments..."
+        ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
+          --application-name unear-app-deploy \
+          --deployment-group-name unear-app-group \
+          --include-only-statuses InProgress \
+          --query 'deployments[0]' \
+          --output text)
+        
+        if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ "$ACTIVE_DEPLOYMENT" != "" ]; then
+          echo "Active deployment found: $ACTIVE_DEPLOYMENT"
+          echo "Waiting for completion..."
+          aws deploy wait deployment-successful --deployment-id $ACTIVE_DEPLOYMENT || \
+          aws deploy wait deployment-stopped --deployment-id $ACTIVE_DEPLOYMENT || true
+        fi
+
+    # 6. CodeDeploy 배포 실행 (기존 S3 패키지 사용)
     - name: Create CodeDeploy deployment
       run: |
         aws deploy create-deployment \
@@ -50,7 +68,7 @@ jobs:
           --s3-location bucket=unear-deploy-bucket,key=deploy-package.zip,bundleType=zip \
           --description "Automated deployment from GitHub Actions - Commit: ${{ github.sha }}"
 
-    # 6. 배포 상태 확인 (선택사항)
+    # 7. 배포 상태 확인 (선택사항)
     - name: Check deployment status
       run: |
         echo "Deployment triggered successfully!"
