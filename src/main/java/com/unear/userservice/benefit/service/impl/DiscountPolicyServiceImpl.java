@@ -39,7 +39,6 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     private final FranchiseRepository franchiseRepository;
     private final UserActionLogProducer userActionLogProducer;
     private final UserRepository userRepository;
-    private final FranchiseDiscountPolicyRepository franchiseDiscountPolicyRepository;
 
     @Override
     public GeneralDiscountPolicyDetailResponseDto getDiscountPolicyDetail(Long userId, Long discountPolicyDetailId) {
@@ -71,18 +70,18 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
         Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
-        if (requestDto.getFranchiseName() != null) {
-            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
-            metadata.put("keyword", requestDto.getFranchiseName());
-            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_KEYWORD, "benefitPage", metadata);
-        }
+        Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
 
-        if (requestDto.getCategoryCode() != null) {
-            Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
+        if (requestDto.getFranchiseName() != null && !requestDto.getFranchiseName().isBlank()) {
+            metadata.put("franchiseName", requestDto.getFranchiseName());
+        }
+        if (requestDto.getCategoryCode() != null && !requestDto.getCategoryCode().isBlank()) {
             metadata.put("category", requestDto.getCategoryCode());
-            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_CATEGORY, "benefitPage", metadata);
         }
 
+        if (!metadata.equals(baseMetadata)) {
+            userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", metadata);
+        }
 
         return franchiseRepository.findAll(spec, pageable)
                 .map(FranchiseDiscountPolicyResponseDto::from);
