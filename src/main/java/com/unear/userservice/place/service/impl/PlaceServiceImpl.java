@@ -210,16 +210,12 @@ public class PlaceServiceImpl implements PlaceService {
 
         Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
-        // 해당 장소가 이벤트 장소라면? 추가 분기
-        // 아니면 기존 클릭수 조회하는거에 분기로?
-        // event_type_code != NONE -> 이벤트 매장
         if (place.getEventTypeCode() != null && !place.getEventTypeCode().equals(EventType.NONE.name())) {
             Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
             metadata.put("placeName", place.getPlaceName());
             metadata.put("address", place.getAddress());
             userActionLogProducer.logUserAction(userId, UserActionType.VIEW_PLACE_DETAIL, "eventPage", metadata);
         }
-
 
         Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
         if (place.getCategoryCode() != null) {

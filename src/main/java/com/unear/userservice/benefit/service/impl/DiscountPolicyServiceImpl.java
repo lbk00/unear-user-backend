@@ -96,7 +96,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
                 .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
 
         Map<String, Object> metadata = LogMetadataUtils.buildUserBaseMetadata(user);
-        metadata.put("franchiseName", franchise.getName());
+        metadata.put("category", franchise.getCategoryCode());
 
         userActionLogProducer.logUserAction(userId, UserActionType.BENEFIT_DETAIL, "benefitPage", metadata);
 
