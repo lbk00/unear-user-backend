@@ -8,17 +8,19 @@ import java.util.Arrays;
 @Getter
 public enum MembershipGrade {
 
-    BASIC("BASIC", "우수"),
-    VIP("VIP", "VIP"),
-    VVIP("VVIP", "VVIP"),
-    ALL("ALL", "모든등급");
+    VVIP("VVIP", "VVIP", 1),
+    VIP("VIP", "VIP", 2),
+    BASIC("BASIC", "우수", 3),
+    ALL("ALL", "모든등급", 4);
 
     private final String code;
     private final String label;
+    private final int priority;
 
-    MembershipGrade(String code, String label) {
+    MembershipGrade(String code, String label, int priority) {
         this.code = code;
         this.label = label;
+        this.priority = priority;
     }
 
     public static MembershipGrade fromCode(String code) {
@@ -31,5 +33,4 @@ public enum MembershipGrade {
     public static boolean isAll(String code) {
         return ALL.code.equalsIgnoreCase(code);
     }
-
 }
