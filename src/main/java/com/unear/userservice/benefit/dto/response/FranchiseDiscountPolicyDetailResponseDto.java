@@ -1,11 +1,12 @@
 package com.unear.userservice.benefit.dto.response;
 
-import com.unear.userservice.benefit.entity.FranchiseDiscountPolicy;
+import com.unear.userservice.common.enums.MembershipGrade;
 import com.unear.userservice.place.entity.Franchise;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -23,6 +24,8 @@ public class FranchiseDiscountPolicyDetailResponseDto {
     public static FranchiseDiscountPolicyDetailResponseDto from(Franchise franchise) {
         List<MembershipGradePolicyResponseDto> policies = franchise.getFranchiseDiscountPolicies().stream()
                 .map(MembershipGradePolicyResponseDto::from)
+                .sorted(Comparator.comparingInt(p ->
+                        MembershipGrade.fromCode(p.getMembershipCode()).getPriority()))
                 .toList();
 
         return new FranchiseDiscountPolicyDetailResponseDto(
@@ -33,8 +36,6 @@ public class FranchiseDiscountPolicyDetailResponseDto {
                 policies
         );
     }
-
-
 }
 
 
