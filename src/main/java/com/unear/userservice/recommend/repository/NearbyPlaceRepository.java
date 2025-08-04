@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface PlaceRepository extends JpaRepository<Place, Long> {
+public interface NearbyPlaceRepository extends JpaRepository<Place, Long> {
 
     @Query(value = """
         SELECT *
