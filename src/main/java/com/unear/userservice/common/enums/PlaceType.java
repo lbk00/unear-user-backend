@@ -29,7 +29,7 @@ public enum PlaceType {
     }
 
     public boolean isBasic() {
-        return this == BASIC;
+        return this == BASIC || this == LOCAL;
     }
 
     public boolean isFranchise() {
