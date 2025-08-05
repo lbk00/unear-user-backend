@@ -19,11 +19,8 @@ public class RedisSseEmitterPool {
     private final Map<Long, SseEmitter> localEmitters = new ConcurrentHashMap<>();
     private final String instanceId = UUID.randomUUID().toString();
 
-
-
     public SseEmitter connect(Long userId) {
         SseEmitter emitter = new SseEmitter(60L * 1000 * 60);
-
         localEmitters.put(userId, emitter);
 
         stringRedisTemplate.opsForValue().set(
@@ -32,17 +29,39 @@ public class RedisSseEmitterPool {
                 Duration.ofMinutes(2)
         );
 
-        log.info("User {} connected to instance {}", userId, instanceId);
+        log.info("[SSE-CONNECT] userId={} connected to instanceId={}", userId, instanceId);
 
-        emitter.onCompletion(() -> cleanup(userId));
-        emitter.onTimeout(() -> cleanup(userId));
-        emitter.onError(e -> cleanup(userId));
+        emitter.onCompletion(() -> {
+            log.info("[SSE-COMPLETE] userId={} completed connection", userId);
+            cleanup(userId);
+        });
+
+        emitter.onTimeout(() -> {
+            log.warn("[SSE-TIMEOUT] userId={} SSE timeout", userId);
+            cleanup(userId);
+        });
+
+        emitter.onError(e -> {
+            log.error("[SSE-ERROR] userId={} error occurred: {}", userId, e.toString());
+            cleanup(userId);
+        });
+
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("connected"));
+            log.info("[SSE-SEND] Initial dummy event sent to userId={}", userId);
+        } catch (IOException e) {
+            log.error("[SSE-ERROR] Failed to send initial event to userId={}: {}", userId, e.toString());
+            emitter.completeWithError(e);
+        }
 
         return emitter;
     }
 
     public void sendToUser(Long userId, String eventName, Object data) {
         String targetInstance = stringRedisTemplate.opsForValue().get("user_connection:" + userId);
+        log.debug("[SSE-SEND-TRY] Try send to userId={}, targetInstance={}, currentInstance={}", userId, targetInstance, instanceId);
 
         if (instanceId.equals(targetInstance)) {
             SseEmitter emitter = localEmitters.get(userId);
@@ -51,34 +70,41 @@ public class RedisSseEmitterPool {
                     emitter.send(SseEmitter.event()
                             .name(eventName)
                             .data(data));
-                    log.info("Notification sent to user {} on instance {}", userId, instanceId);
+                    log.info("[SSE-SEND] userId={} eventName={} sent successfully", userId, eventName);
                 } catch (IOException e) {
-                    log.error("Failed to send notification to user {}", userId, e);
+                    log.error("[SSE-SEND-FAIL] Failed to send event to userId={}, eventName={}, err={}", userId, eventName, e.toString());
                     cleanup(userId);
                 }
+            } else {
+                log.warn("[SSE-SEND-WARN] No emitter found for userId={}", userId);
             }
         } else {
-            log.debug("User {} not connected to this instance. Target: {}, Current: {}",
-                    userId, targetInstance, instanceId);
+            log.debug("[SSE-SKIP] userId={} not connected to this instance", userId);
         }
     }
 
     public boolean isConnected(Long userId) {
-        return localEmitters.containsKey(userId) &&
-                instanceId.equals(stringRedisTemplate.opsForValue().get("user_connection:" + userId));
+        String connectedInstance = stringRedisTemplate.opsForValue().get("user_connection:" + userId);
+        boolean result = localEmitters.containsKey(userId) && instanceId.equals(connectedInstance);
+        log.debug("[SSE-CHECK] userId={} connectedInstance={}, currentInstance={}, result={}",
+                userId, connectedInstance, instanceId, result);
+        return result;
     }
 
     public SseEmitter get(Long userId) {
-        return localEmitters.get(userId);
+        SseEmitter emitter = localEmitters.get(userId);
+        log.debug("[SSE-GET] userId={} emitter={}", userId, emitter != null ? "exists" : "null");
+        return emitter;
     }
 
     public void remove(Long userId) {
+        log.info("[SSE-REMOVE] userId={} remove requested", userId);
         cleanup(userId);
     }
 
     private void cleanup(Long userId) {
         localEmitters.remove(userId);
         stringRedisTemplate.delete("user_connection:" + userId);
-        log.info("User {} disconnected from instance {}", userId, instanceId);
+        log.info("[SSE-CLEANUP] userId={} disconnected and cleaned up from instanceId={}", userId, instanceId);
     }
 }
