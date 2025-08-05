@@ -1,7 +1,11 @@
 package com.unear.userservice.notification.redis;
 
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.RedisCommandExecutionException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -33,6 +37,20 @@ public class RedisStreamConfig {
     }
 
     @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
+        mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        mapper.configure(JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS, true);
+
+        return mapper;
+    }
+
+    @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
@@ -44,7 +62,6 @@ public class RedisStreamConfig {
     public void initializeStreams() {
         log.info("Initializing Redis Stream Consumer Groups...");
 
-        // POS 알림용 컨슈머 그룹 생성
         createConsumerGroup("pos-notification-stream", "notification-consumer-group");
 
         log.info("Redis Stream Consumer Groups initialization completed");
