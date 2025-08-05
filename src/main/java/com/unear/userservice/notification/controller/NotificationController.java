@@ -28,16 +28,6 @@ public class NotificationController {
     @GetMapping("/subscribe/{userId}")
     public SseEmitter subscribe(@PathVariable Long userId , @RequestParam String token) {
         log.info("🔥 SSE 연결 요청 시작 - userId: {}", userId);
-
-        if (!jwtTokenProvider.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-
-        Long tokenUserId = jwtTokenProvider.extractUserId(token);
-        if (!userId.equals(tokenUserId)) {
-            throw new RuntimeException("User ID mismatch");
-        }
-
         return emitterPool.connect(userId);
     }
 }
