@@ -1,7 +1,6 @@
 package com.unear.userservice.notification.controller;
 
 import com.unear.userservice.notification.service.impl.RedisSseEmitterPool;
-import com.unear.userservice.notification.service.impl.SseEmitterPool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
