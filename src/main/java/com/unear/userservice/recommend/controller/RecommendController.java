@@ -5,9 +5,9 @@ import com.unear.userservice.common.docs.recommend.RecommendApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
 import com.unear.userservice.recommend.dto.request.LocationBasedRecommendRequestDto;
 import com.unear.userservice.recommend.dto.response.PlaceResponseDto;
-
 import com.unear.userservice.recommend.service.VectorBasedRecommendService;
-import com.unear.userservice.recommend.service.impl.DistanceBasedRecommendServiceImpl;
+import com.unear.userservice.recommend.service.DistanceBasedRecommendService;
+
 import com.unear.userservice.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecommendController {
 
-    private final DistanceBasedRecommendServiceImpl distanceBasedRecommendService;
+    private final DistanceBasedRecommendService distanceBasedRecommendService;
     private final VectorBasedRecommendService vectorBasedRecommendService;
 
     @RecommendApiDocs.GetRecommendPlaces
