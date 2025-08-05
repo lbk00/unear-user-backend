@@ -1,10 +1,13 @@
 package com.unear.userservice.recommend.controller;
 
 import com.unear.userservice.common.annotation.LoginUser;
+import com.unear.userservice.common.docs.recommend.RecommendApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
 import com.unear.userservice.recommend.dto.request.LocationBasedRecommendRequestDto;
 import com.unear.userservice.recommend.dto.response.PlaceResponseDto;
-import com.unear.userservice.recommend.service.RecommendService;
+import com.unear.userservice.recommend.service.VectorBasedRecommendService;
+import com.unear.userservice.recommend.service.DistanceBasedRecommendService;
+
 import com.unear.userservice.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +20,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecommendController {
 
-    private final RecommendService recommendService;
+    private final DistanceBasedRecommendService distanceBasedRecommendService;
+    private final VectorBasedRecommendService vectorBasedRecommendService;
 
+    @RecommendApiDocs.GetRecommendPlaces
     @PostMapping("/places")
-    public ResponseEntity<ApiResponse<List<PlaceResponseDto>>> recommendPlacesByLocation(
+    public ResponseEntity<ApiResponse<List<PlaceResponseDto>>> recommendPlaces(
             @LoginUser User user,
             @RequestBody LocationBasedRecommendRequestDto request
     ) {
-        List<PlaceResponseDto> results = recommendService.recommendPlaces(user.getUserId(), request);
+        List<PlaceResponseDto> results = vectorBasedRecommendService.recommendWithScore(user.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.success(results));
     }
-
 }
