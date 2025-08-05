@@ -32,7 +32,8 @@ public enum ErrorCode {
     EVENT_NOT_FOUND(HttpStatus.NOT_FOUND,"EVENT_NOT_FOUND","이벤트를 찾지 못했습니다."),
     ROULETTE_ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "ROULETTE_ALREADY_PARTICIPATED", "이미 룰렛에 참여하였습니다."),
     NOT_FOUND_PROFILE(HttpStatus.NOT_FOUND,"NOT_FOUND_PROFILE","프로필 정보를 찾을 수 없습니다."),
-    NOT_FOUND_PLACE(HttpStatus.NOT_FOUND,"NOT_FOUND_PLACE", "제휴처를 찾을 수 없습니다.")
+    NOT_FOUND_PLACE(HttpStatus.NOT_FOUND,"NOT_FOUND_PLACE", "제휴처를 찾을 수 없습니다."),
+    ALREADY_EXISTS_STORY(HttpStatus.BAD_REQUEST,"ALREADY_EXISTS_STORY","이미 이번달에 생성된 스토리가 존재합니다")
     ;
 
 
