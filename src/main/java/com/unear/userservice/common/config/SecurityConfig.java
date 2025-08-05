@@ -60,7 +60,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/auth/oauth/**"
+            "/auth/oauth/**",
+            "/notifications/subscribe/**"
     };
 
     @Bean
