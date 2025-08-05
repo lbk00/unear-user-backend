@@ -35,7 +35,7 @@ public class StoryController {
 
     @GetMapping()
     @StoryApiDocs.GetStory
-    public ResponseEntity<?> getUserStory(
+    public ResponseEntity<List<StoryDetailResponseDto>> getUserStory(
             @AuthenticationPrincipal CustomUser userDetails,
             @RequestParam("targetMonth") String targetMonth
     ) {
