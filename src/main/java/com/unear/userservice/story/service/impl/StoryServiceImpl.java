@@ -56,6 +56,10 @@ public class StoryServiceImpl implements StoryService {
     public void createStory(Long userId, StoryCreateRequestDto request) {
         String targetMonth = request.targetMonth().minusMonths(1).toString(); // "2025-07"
 
+        if (!storyRepository.findByUserIdAndTargetMonth(userId, targetMonth).isEmpty()) {
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS_STORY);
+        }
+
         List<UserHistory> topHistories = userHistoryRepository
                 .findTop4ByUserIdAndMonthOrderByAmountDesc(userId, targetMonth);
 
