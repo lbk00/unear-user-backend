@@ -3,12 +3,14 @@ package com.unear.userservice.story.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "story_summary")
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -21,7 +23,6 @@ public class Story {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    // 👇 이렇게 바꿈 (YearMonth → String)
     @Column(name = "target_month", nullable = false)
     private String targetMonth;
 
