@@ -1,14 +1,16 @@
 package com.unear.userservice.story.service;
 
-import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
+import com.unear.userservice.story.dto.request.StoryCreateRequestDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
-import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
+import com.unear.userservice.story.dto.response.StoryDetailResponseDto;
 
 import java.util.List;
 
 public interface StoryService {
-    StoryDiagnosisResponseDto getDiagnosis(Long userId);
-    List<StoryHistoryResponseDto> getHistory(Long userId);
-    StoryCurrentResponseDto getCurrent(Long userId);
-}
 
+    StoryDiagnosisResponseDto getDiagnosis(Long userId);
+
+    void createStory(Long userId, StoryCreateRequestDto request);
+
+    List<StoryDetailResponseDto> getUserStories(Long userId, String targetMonth);
+}

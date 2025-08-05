@@ -5,5 +5,6 @@ import lombok.Builder;
 @Builder
 public record StoryDiagnosisResponseDto(
         String type,
-        String comment
+        String tag,
+        boolean hasStory
 ) {}
