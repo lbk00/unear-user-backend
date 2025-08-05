@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SseNotificationService implements NotificationService {
 
-    private final SseEmitterPool emitterPool;
+    private final RedisSseEmitterPool emitterPool;
 
     @Override
     public void sendNotification(PosNotificationEventRequest request) {

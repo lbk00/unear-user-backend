@@ -9,17 +9,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/internal/pos")
-@RequiredArgsConstructor
+//@RestController
+//@RequestMapping("/internal/pos")
+//@RequiredArgsConstructor
 public class PosNotificationController {
 
-    private final NotificationService notificationService;
-
-
-    @PostMapping("/notify")
-    public ApiResponse<String> notify(@RequestBody PosNotificationEventRequest request) {
-        notificationService.sendNotification(request);
-        return ApiResponse.success("포스 알림 전송 완료");
-    }
+//    private final NotificationService notificationService;
+//
+//
+//    @PostMapping("/notify")
+//    public ApiResponse<String> notify(@RequestBody PosNotificationEventRequest request) {
+//        notificationService.sendNotification(request);
+//        return ApiResponse.success("포스 알림 전송 완료");
+//    }
 }
