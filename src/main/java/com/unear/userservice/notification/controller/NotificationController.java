@@ -1,5 +1,6 @@
 package com.unear.userservice.notification.controller;
 
+import com.unear.userservice.notification.service.impl.RedisSseEmitterPool;
 import com.unear.userservice.notification.service.impl.SseEmitterPool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final SseEmitterPool emitterPool;
+    private final RedisSseEmitterPool emitterPool;
 
     @GetMapping("/subscribe/{userId}")
     public SseEmitter subscribe(@PathVariable Long userId) {
