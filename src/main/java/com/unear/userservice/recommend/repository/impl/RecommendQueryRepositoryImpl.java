@@ -1,7 +1,9 @@
 package com.unear.userservice.recommend.repository.impl;
 
+import com.unear.userservice.place.dto.response.PlaceResponseDto;
 import com.unear.userservice.recommend.dto.request.LocationBasedRecommendRequestDto;
-import com.unear.userservice.recommend.dto.response.PlaceResponseDto;
+
+import com.unear.userservice.recommend.dto.response.RecommendPlaceResponseDto;
 import com.unear.userservice.recommend.repository.RecommendQueryRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,7 +22,7 @@ public class RecommendQueryRepositoryImpl implements RecommendQueryRepository {
     private final EntityManager em;
 
     @Override
-    public List<PlaceResponseDto> recommendPlaces(Long userId, LocationBasedRecommendRequestDto request) {
+    public List<RecommendPlaceResponseDto> recommendPlaces(Long userId, LocationBasedRecommendRequestDto request) {
         String sql = """
             WITH target_user AS (
                 SELECT user_id, payment_type_tag, user_embedding
@@ -96,7 +98,7 @@ public class RecommendQueryRepositoryImpl implements RecommendQueryRepository {
         List<Object[]> results = query.getResultList();
 
         return results.stream()
-                .map(row -> new PlaceResponseDto(
+                .map(row -> new RecommendPlaceResponseDto(
                         ((Number) row[0]).longValue(),     // place_id
                         (String) row[1],                   // place_name
                         (BigDecimal) row[2],               // latitude

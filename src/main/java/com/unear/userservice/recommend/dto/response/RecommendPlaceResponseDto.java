@@ -1,10 +1,11 @@
 package com.unear.userservice.recommend.dto.response;
 
+import com.unear.userservice.place.dto.response.PlaceResponseDto;
 import com.unear.userservice.place.entity.Place;
 
 import java.math.BigDecimal;
 
-public record PlaceResponseDto(
+public record RecommendPlaceResponseDto(
         Long placeId,
         String placeName,
         BigDecimal latitude,
@@ -12,8 +13,8 @@ public record PlaceResponseDto(
         double distanceInMeters,
         BigDecimal score
 ) {
-    public static PlaceResponseDto from(Place place, double distance, BigDecimal score) {
-        return new PlaceResponseDto(
+    public static RecommendPlaceResponseDto from(Place place, double distance, BigDecimal score) {
+        return new RecommendPlaceResponseDto(
                 place.getPlaceId(),
                 place.getPlaceName(),
                 place.getLatitude(),
@@ -23,8 +24,8 @@ public record PlaceResponseDto(
         );
     }
 
-    public static PlaceResponseDto from(Place place, double distance) { //DistanceBasedRecommandService 에서 쓰임
-        return new PlaceResponseDto(
+    public static RecommendPlaceResponseDto from(Place place, double distance) { //DistanceBasedRecommandService 에서 쓰임
+        return new RecommendPlaceResponseDto(
                 place.getPlaceId(),
                 place.getPlaceName(),
                 place.getLatitude(),

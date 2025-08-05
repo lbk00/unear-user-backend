@@ -15,7 +15,7 @@ public class RecommendApiDocs {
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
     @Operation(summary = "위치 기반 추천 장소 조회", description = "사용자의 현재 위치를 기반으로 개인화된 추천 장소 목록을 반환합니다.")
-    @ApiResponse(responseCode = "200", description = "추천 장소 목록 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.unear.userservice.recommend.dto.response.PlaceResponseDto.class), examples = @ExampleObject(value = """
+    @ApiResponse(responseCode = "200", description = "추천 장소 목록 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.unear.userservice.recommend.dto.response.RecommendPlaceResponseDto.class), examples = @ExampleObject(value = """
             {
                   "resultCode": 200,
                   "codeName": "SUCCESS",

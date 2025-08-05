@@ -2,10 +2,10 @@ package com.unear.userservice.recommend.service;
 
 
 import com.unear.userservice.recommend.dto.request.LocationBasedRecommendRequestDto;
-import com.unear.userservice.recommend.dto.response.PlaceResponseDto;
+import com.unear.userservice.recommend.dto.response.RecommendPlaceResponseDto;
 
 import java.util.List;
 
 public interface DistanceBasedRecommendService {
-    List<PlaceResponseDto> recommendByDistance(Long userId, LocationBasedRecommendRequestDto request);
+    List<RecommendPlaceResponseDto> recommendByDistance(Long userId, LocationBasedRecommendRequestDto request);
 }

@@ -1,8 +1,10 @@
 package com.unear.userservice.recommend.service.impl;
 
+import com.unear.userservice.place.dto.response.PlaceResponseDto;
 import com.unear.userservice.place.entity.Place;
 import com.unear.userservice.recommend.dto.request.LocationBasedRecommendRequestDto;
-import com.unear.userservice.recommend.dto.response.PlaceResponseDto;
+
+import com.unear.userservice.recommend.dto.response.RecommendPlaceResponseDto;
 import com.unear.userservice.recommend.repository.NearbyPlaceRepository;
 import com.unear.userservice.recommend.service.DistanceBasedRecommendService;
 import com.unear.userservice.recommend.util.GeoUtils;
@@ -17,7 +19,7 @@ public class DistanceBasedRecommendServiceImpl implements DistanceBasedRecommend
     private final NearbyPlaceRepository nearbyPlaceRepository;
 
     @Override
-    public List<PlaceResponseDto> recommendByDistance(Long userId, LocationBasedRecommendRequestDto request) {
+    public List<RecommendPlaceResponseDto> recommendByDistance(Long userId, LocationBasedRecommendRequestDto request) {
         double lat = request.latitude().doubleValue();
         double lng = request.longitude().doubleValue();
         double radius = 300.0;
@@ -30,7 +32,7 @@ public class DistanceBasedRecommendServiceImpl implements DistanceBasedRecommend
                             lat, lng,
                             place.getLatitude().doubleValue(), place.getLongitude().doubleValue()
                     );
-                    return PlaceResponseDto.from(place, distance); // score 없음
+                    return RecommendPlaceResponseDto.from(place, distance); // score 없음
                 })
                 .toList();
     }
