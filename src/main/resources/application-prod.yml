@@ -108,6 +108,11 @@ logging:
   level:
     root: INFO
     com.unear: INFO
+    org.springframework.web.cors: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.web.filter.CorsFilter: DEBUG
+    org.springframework.security.web.access: DEBUG
+    org.springframework.security.web.FilterChainProxy: DEBUG
 
 internal:
   key: ${INTERNAL_KEY}
