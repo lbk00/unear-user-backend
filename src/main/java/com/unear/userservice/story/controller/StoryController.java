@@ -3,15 +3,20 @@ package com.unear.userservice.story.controller;
 import com.unear.userservice.common.annotation.LoginUser;
 import com.unear.userservice.common.docs.story.StoryApiDocs;
 import com.unear.userservice.common.response.ApiResponse;
+import com.unear.userservice.common.security.CustomUser;
+import com.unear.userservice.common.security.CustomUserDetailsService;
+import com.unear.userservice.story.dto.request.StoryCreateRequestDto;
 import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
+import com.unear.userservice.story.dto.response.StoryDetailResponseDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
-import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
 import com.unear.userservice.story.service.StoryService;
 import com.unear.userservice.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.YearMonth;
 import java.util.List;
 
 @RestController
@@ -28,17 +33,26 @@ public class StoryController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/history")
-    @StoryApiDocs.GetHistory
-    public ResponseEntity<ApiResponse<List<StoryHistoryResponseDto>>> getHistory(@LoginUser User user) {
-        List<StoryHistoryResponseDto> history = storyService.getHistory(user.getUserId());
-        return ResponseEntity.ok(ApiResponse.success(history));
+    @GetMapping()
+    @StoryApiDocs.GetStory
+    public ResponseEntity<?> getUserStory(
+            @AuthenticationPrincipal CustomUser userDetails,
+            @RequestParam("targetMonth") String targetMonth
+    ) {
+        Long userId = userDetails.getId(); // 여기서 추출
+        List<StoryDetailResponseDto> stories = storyService.getUserStories(userId, targetMonth);
+        return ResponseEntity.ok(stories);
     }
 
-    @GetMapping("/current")
-    @StoryApiDocs.GetCurrent
-    public ResponseEntity<ApiResponse<StoryCurrentResponseDto>> getCurrentStory(@LoginUser User user) {
-        StoryCurrentResponseDto response = storyService.getCurrent(user.getUserId());
-        return ResponseEntity.ok(ApiResponse.success(response));
+
+
+    @PostMapping
+    @StoryApiDocs.CreateStory
+    public ResponseEntity<ApiResponse<Void>> createStory(@LoginUser User user) {
+        StoryCreateRequestDto request = StoryCreateRequestDto.builder()
+                .targetMonth(YearMonth.now()) // 필수 필드만 채워서 넘김
+                .build();
+        storyService.createStory(user.getUserId(), request );
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

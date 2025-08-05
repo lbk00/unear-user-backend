@@ -1,86 +1,131 @@
 package com.unear.userservice.story.service.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.unear.userservice.story.dto.response.StoryCurrentResponseDto;
+import com.unear.userservice.common.exception.BusinessException;
+import com.unear.userservice.common.exception.ErrorCode;
+import com.unear.userservice.place.entity.Place;
+import com.unear.userservice.place.repository.PlaceRepository;
+import com.unear.userservice.story.dto.request.StoryCreateRequestDto;
+import com.unear.userservice.story.dto.response.StoryDetailResponseDto;
 import com.unear.userservice.story.dto.response.StoryDiagnosisResponseDto;
-import com.unear.userservice.story.dto.response.StoryHistoryResponseDto;
+import com.unear.userservice.story.entity.Story;
+import com.unear.userservice.story.entity.StoryRepresentativeLog;
+import com.unear.userservice.story.entity.UserRecommendationProfile;
+import com.unear.userservice.story.repository.StoryRepository;
+import com.unear.userservice.story.repository.StoryRepresentativeLogRepository;
+import com.unear.userservice.story.repository.UserRecommendationProfileRepository;
 import com.unear.userservice.story.service.StoryService;
-import com.unear.userservice.story.util.StoryAnalysisUtil;
-import com.unear.userservice.story.util.StoryAiClient;
-import com.unear.userservice.story.vo.UserAnalysisResult;
+import com.unear.userservice.story.util.S3ImageMapper;
+import com.unear.userservice.user.entity.UserHistory;
+import com.unear.userservice.user.repository.UserHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+
+import static com.unear.userservice.story.util.StoryCommentGenerator.generateRandomCommentByCategory;
 
 @Service
 @RequiredArgsConstructor
 public class StoryServiceImpl implements StoryService {
 
-    private final StoryAnalysisUtil analysisUtil;
-    private final StoryAiClient aiClient;
-    private final ObjectMapper objectMapper;
+    private final StoryRepository storyRepository;
+    private final UserRecommendationProfileRepository userRecommendationProfileRepository;
+    private final UserHistoryRepository userHistoryRepository;
+    private final StoryRepresentativeLogRepository storyRepresentativeLogRepository;
+    private final PlaceRepository placeRepository;
+    private final S3ImageMapper s3ImageMapper;
 
     @Override
     public StoryDiagnosisResponseDto getDiagnosis(Long userId) {
-        // 1. 사용자 소비 내역 분석
-        UserAnalysisResult analysisResult = analysisUtil.analyze(userId);
+        UserRecommendationProfile profile = userRecommendationProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PROFILE));
 
-        // 2. 프롬프트 생성 후 AI 호출
-        String prompt = aiClient.generatePrompt(analysisResult);
-        String aiResponse = aiClient.requestDiagnosis(prompt);
+        boolean hasStory = storyRepository.existsByUserId(userId);
 
-        // 3. AI 응답 파싱
-        try {
-            JsonNode node = objectMapper.readTree(aiResponse);
-            return StoryDiagnosisResponseDto.builder()
-                    .type(node.get("type").asText())
-                    .comment(node.get("comment").asText())
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException("AI 응답 파싱 실패", e);
-        }
+        return StoryDiagnosisResponseDto.builder()
+                .type(profile.getPaymentTypeTag())
+                .tag(profile.getHashtag())
+                .hasStory(hasStory)
+                .build();
     }
 
     @Override
-    public List<StoryHistoryResponseDto> getHistory(Long userId) {
-        // TODO: 임시 데이터, 추후 DB 또는 AI 진단 기반으로 대체
-        return List.of(
-                StoryHistoryResponseDto.builder()
-                        .month(YearMonth.of(2025, 8))
-                        .type("쩝쩝박사")
-                        .comment("축제의 즐거움은 맛에 있다고 믿는 당신!")
-                        .imageUrl("https://cdn.unear.site/story/type/zzep.png")
-                        .build(),
+    @Transactional
+    public void createStory(Long userId, StoryCreateRequestDto request) {
+        String targetMonth = request.targetMonth().minusMonths(1).toString(); // "2025-07"
 
-                StoryHistoryResponseDto.builder()
-                        .month(YearMonth.of(2025, 7))
-                        .type("알뜰소비러")
-                        .comment("혜택은 놓치지 않는다! 알뜰하고 계획적인 당신!")
-                        .imageUrl("https://cdn.unear.site/story/type/saver.png")
+        List<UserHistory> topHistories = userHistoryRepository
+                .findTop4ByUserIdAndMonthOrderByAmountDesc(userId, targetMonth);
+
+        if (topHistories.isEmpty()) {
+            createEmptyStory(userId, targetMonth);
+            return;
+        }
+
+        for (UserHistory history : topHistories) {
+            createStoryFromHistory(userId, targetMonth, history);
+        }
+    }
+
+    private void createEmptyStory(Long userId, String targetMonth) {
+        Story summary = storyRepository.save(
+                Story.builder()
+                        .userId(userId)
+                        .targetMonth(targetMonth)
+                        .imageUrl("BASIC.png")
+                        .comment("이번 달은 결제 내역이 없어")
+                        .build()
+        );
+
+        storyRepresentativeLogRepository.save(
+                StoryRepresentativeLog.builder()
+                        .storySummary(summary)
+                        .date(null)
+                        .storeName("결제 내역 없음")
+                        .amount(0)
+                        .logoUrl("default_logo.png")
+                        .build()
+        );
+    }
+
+    private void createStoryFromHistory(Long userId, String targetMonth, UserHistory history) {
+        Place place = placeRepository.findById(history.getPlaceId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PLACE));
+
+        String categoryCode = place.getCategoryCode();
+        String imageFileName = S3ImageMapper.getRandomBackgroundImageFileName(categoryCode);
+        String comment = generateRandomCommentByCategory(categoryCode);
+
+        Story summary = storyRepository.save(
+                Story.builder()
+                        .userId(userId)
+                        .targetMonth(targetMonth)
+                        .imageUrl(imageFileName)
+                        .comment(comment)
+                        .build()
+        );
+
+        storyRepresentativeLogRepository.save(
+                StoryRepresentativeLog.builder()
+                        .storySummary(summary)
+                        .date(history.getPaidAt().toLocalDate())
+                        .storeName(place.getPlaceName())
+                        .amount(history.getTotalPaymentAmount())
+                        .logoUrl(history.getPlaceCategory())
                         .build()
         );
     }
 
     @Override
-    public StoryCurrentResponseDto getCurrent(Long userId) {
-        // 대표 결제 내역
-        StoryCurrentResponseDto.RepresentativeLog repLog =
-                StoryCurrentResponseDto.RepresentativeLog.builder()
-                        .date(LocalDate.of(2025, 7, 15))
-                        .storeName("맥도날드 치즈버거")
-                        .amount(14200)
-                        .logoUrl("https://cdn.unear.site/logo/mcdonalds.png")
-                        .build();
-
-        return StoryCurrentResponseDto.builder()
-                .month(YearMonth.of(2025, 7))
-                .comment("맛있는 음식 도착 소식에, 행복해지는 순간이 찾아왔어.")
-                .imageUrl("https://cdn.unear.site/story/current/zzep_full.png")
-                .representativeLog(repLog)
-                .build();
+    @Transactional(readOnly = true)
+    public List<StoryDetailResponseDto> getUserStories(Long userId, String targetMonth) {
+        List<Story> stories = storyRepository.findByUserIdAndTargetMonth(userId, targetMonth);
+        return stories.stream()
+                .map(story -> storyRepresentativeLogRepository.findByStorySummary(story)
+                        .map(log -> StoryDetailResponseDto.of(story, log))
+                        .orElseGet(() -> StoryDetailResponseDto.ofEmpty(story)))
+                .toList();
     }
 }
