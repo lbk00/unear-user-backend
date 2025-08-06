@@ -2,6 +2,7 @@ package com.unear.userservice.notification.controller;
 
 import com.unear.userservice.common.jwt.JwtTokenProvider;
 import com.unear.userservice.notification.service.impl.RedisSseEmitterPool;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,8 +27,11 @@ public class NotificationController {
 
 
     @GetMapping(value = "/subscribe/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@PathVariable Long userId , @RequestParam String token) {
+    public SseEmitter subscribe(@PathVariable Long userId , @RequestParam String token, HttpServletResponse response) {
         log.info("🔥 SSE 연결 요청 시작 - userId: {}", userId);
+
+        response.setHeader("Access-Control-Allow-Origin", "https://www.unear.site");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         return emitterPool.connect(userId);
     }
 }
