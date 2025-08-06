@@ -46,6 +46,15 @@ public class RedisSseEmitterPool {
             cleanup(userId);
         });
 
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("connected"));
+            log.info("[SSE-SEND] Initial dummy event sent to userId={}", userId);
+        } catch (IOException e) {
+            log.error("[SSE-ERROR] Failed to send initial event to userId={}: {}", userId, e.toString());
+            emitter.completeWithError(e);
+        }
         return emitter;
     }
 
@@ -96,5 +105,21 @@ public class RedisSseEmitterPool {
         localEmitters.remove(userId);
         stringRedisTemplate.delete("user_connection:" + userId);
         log.info("[SSE-CLEANUP] userId={} disconnected and cleaned up from instanceId={}", userId, instanceId);
+    }
+
+    public void sendPingToAll() {
+        for (Map.Entry<Long, SseEmitter> entry : localEmitters.entrySet()) {
+            Long userId = entry.getKey();
+            SseEmitter emitter = entry.getValue();
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("ping")
+                        .data("keep-alive"));  // 아무 데이터나 가능
+                log.debug("[SSE-PING] userId={} keep-alive 전송", userId);
+            } catch (Exception e) {
+                log.warn("[SSE-PING] userId={} ping 실패: {}", userId, e.toString());
+                emitter.completeWithError(e);
+            }
+        }
     }
 }
