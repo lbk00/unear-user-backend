@@ -48,7 +48,7 @@ public class SseNotificationService implements NotificationService {
             }
 
             emitterPool.sendToUser(userId, eventName, responseDto);
-            log.info("[NOTIFY] Sent event '{}' to userId={}", eventName, userId);
+            log.info("[NOTIFY-SEND!!] Sent event '{}' to userId={}", eventName, userId);
 
         } catch (Exception e) {
             log.error("[NOTIFY-FAIL] Failed to send notification to userId={}, err={}", userId, e.toString());
