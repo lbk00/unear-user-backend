@@ -91,8 +91,9 @@ public class PosNotificationStreamConsumer {
 
     private PosNotificationType parseEnum(String val) {
         if (val == null || val.isBlank()) return null;
+        val = val.replaceAll("\"", "").trim();
         try {
-            return PosNotificationType.valueOf(val.trim());
+            return PosNotificationType.valueOf(val);
         } catch (IllegalArgumentException e) {
             log.warn("잘못된 Enum 값: {}", val);
             return null;
