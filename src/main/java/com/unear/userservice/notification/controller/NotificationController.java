@@ -29,6 +29,11 @@ public class NotificationController {
     @GetMapping(value = "/subscribe/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@PathVariable Long userId , @RequestParam String token, HttpServletResponse response) {
         log.info("🔥 SSE 연결 요청 시작 - userId: {}", userId);
+
+        response.setHeader("Access-Control-Allow-Origin", "https://www.unear.site");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Cache-Control");
+
         return emitterPool.connect(userId);
     }
 }
