@@ -4,6 +4,7 @@ import com.unear.userservice.common.jwt.JwtTokenProvider;
 import com.unear.userservice.notification.service.impl.RedisSseEmitterPool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +26,7 @@ public class NotificationController {
     private final JwtTokenProvider jwtTokenProvider;
 
 
-    @GetMapping("/subscribe/{userId}")
+    @GetMapping(value = "/subscribe/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@PathVariable Long userId , @RequestParam String token) {
         log.info("🔥 SSE 연결 요청 시작 - userId: {}", userId);
         return emitterPool.connect(userId);
