@@ -16,7 +16,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import static java.lang.Integer.parseInt;
 
 @Component
 @RequiredArgsConstructor
@@ -69,6 +68,18 @@ public class PosNotificationStreamConsumer {
                 .finalAmount(parseLong(map.get("finalAmount")))
                 .build();
     }
+
+    private int parseInt(String val, int defaultVal) {
+        if (val == null || val.isBlank()) return defaultVal;
+        val = val.replaceAll("\"", "").trim();
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            log.warn("잘못된 Int 형식: {}", val);
+            return defaultVal;
+        }
+    }
+
 
     private Long parseLong(String val) {
         if (val == null) return null;
