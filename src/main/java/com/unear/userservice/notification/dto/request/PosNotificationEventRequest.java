@@ -1,13 +1,13 @@
 package com.unear.userservice.notification.dto.request;
 
 import com.unear.userservice.common.enums.PosNotificationType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@Setter
 public class PosNotificationEventRequest {
     private Long userId;
     private int stampOrder;
