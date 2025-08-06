@@ -55,7 +55,6 @@ public class RedisSseEmitterPool {
             log.error("[SSE-ERROR] Failed to send initial event to userId={}: {}", userId, e.toString());
             emitter.completeWithError(e);
         }
-
         return emitter;
     }
 
@@ -67,9 +66,7 @@ public class RedisSseEmitterPool {
             SseEmitter emitter = localEmitters.get(userId);
             if (emitter != null) {
                 try {
-                    emitter.send(SseEmitter.event()
-                            .name(eventName)
-                            .data(data));
+                    emitter.send("data: connected\n\n");
                     log.info("[SSE-SEND] userId={} eventName={} sent successfully", userId, eventName);
                 } catch (IOException e) {
                     log.error("[SSE-SEND-FAIL] Failed to send event to userId={}, eventName={}, err={}", userId, eventName, e.toString());
