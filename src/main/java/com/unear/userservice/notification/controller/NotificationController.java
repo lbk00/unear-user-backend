@@ -19,7 +19,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/notifications")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:4000", "https://dev.unear.site"}, allowCredentials = "true")
 public class NotificationController {
 
     private final RedisSseEmitterPool emitterPool;
