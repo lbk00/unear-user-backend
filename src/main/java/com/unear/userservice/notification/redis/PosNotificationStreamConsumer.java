@@ -80,7 +80,6 @@ public class PosNotificationStreamConsumer {
         }
     }
 
-
     private Long parseLong(String val) {
         if (val == null) return null;
         val = val.replaceAll("\"", "").trim();
