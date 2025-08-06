@@ -1,6 +1,7 @@
 package com.unear.userservice.notification.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.unear.userservice.common.enums.PosNotificationType;
 import com.unear.userservice.notification.dto.request.PosNotificationEventRequest;
 import com.unear.userservice.notification.service.impl.SseNotificationService;
 import jakarta.annotation.PostConstruct;
@@ -14,6 +15,8 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
+
+import static java.lang.Integer.parseInt;
 
 @Component
 @RequiredArgsConstructor
@@ -54,6 +57,37 @@ public class PosNotificationStreamConsumer {
     }
 
     private PosNotificationEventRequest convertToDto(Map<String, String> map) {
-        return objectMapper.convertValue(map, PosNotificationEventRequest.class);
+        return PosNotificationEventRequest.builder()
+                .userId(parseLong(map.get("userId")))
+                .stampOrder(parseInt(map.get("stampOrder"), 0))
+                .type(parseEnum(map.get("type")))
+                .message(map.getOrDefault("message", ""))
+                .relatedPlaceId(parseLong(map.get("relatedPlaceId")))
+                .relatedPlaceName(map.get("relatedPlaceName"))
+                .relatedEventId(parseLong(map.get("relatedEventId")))
+                .discountAmount(parseLong(map.get("discountAmount")))
+                .finalAmount(parseLong(map.get("finalAmount")))
+                .build();
     }
+
+    private Long parseLong(String val) {
+        if (val == null) return null;
+        val = val.replaceAll("\"", "").trim();
+        try { return Long.parseLong(val); } catch (NumberFormatException e) {
+            log.warn("잘못된 Long 형식: {}", val);
+            return null;
+        }
+    }
+
+    private PosNotificationType parseEnum(String val) {
+        if (val == null || val.isBlank()) return null;
+        try {
+            return PosNotificationType.valueOf(val.trim());
+        } catch (IllegalArgumentException e) {
+            log.warn("잘못된 Enum 값: {}", val);
+            return null;
+        }
+    }
+
+
 }
