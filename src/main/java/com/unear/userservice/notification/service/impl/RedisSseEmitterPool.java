@@ -46,13 +46,6 @@ public class RedisSseEmitterPool {
             cleanup(userId);
         });
 
-        try {
-            emitter.send("event: connect\ndata: connected\n\n");
-            log.info("[SSE-SEND] Initial dummy event sent to userId={}", userId);
-        } catch (IOException e) {
-            log.error("[SSE-ERROR] Failed to send initial event to userId={}: {}", userId, e.toString());
-            emitter.completeWithError(e);
-        }
         return emitter;
     }
 
