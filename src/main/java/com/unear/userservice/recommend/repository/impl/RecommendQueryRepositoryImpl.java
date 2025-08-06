@@ -86,14 +86,14 @@ public class RecommendQueryRepositoryImpl implements RecommendQueryRepository {
             FROM scored_places
             WHERE score >= 0.2
             ORDER BY score DESC 
-            LIMIT 3
+            LIMIT 5
         """;
 
         Query query = em.createNativeQuery(sql);
         query.setParameter(1, userId);
         query.setParameter(2, request.longitude().doubleValue());
         query.setParameter(3, request.latitude().doubleValue());
-        query.setParameter(4, 1.0); // 반경 (km)
+        query.setParameter(4, 10.0); // 반경 (km)
 
         List<Object[]> results = query.getResultList();
 
