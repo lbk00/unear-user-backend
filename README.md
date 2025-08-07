@@ -1,16 +1,25 @@
 
 ## 프로젝트 이름
 
-> 당신 근처에, U:Near 시스템 백엔드
+### 당신 근처에, U:Near
 
----
+--- 
 
 ## 프로젝트 개요
 
-
+> 주제 : 오프라인 매장과 사용자 간 연결을 돕는 참여형 혜택 플랫폼
+> 
+> 목적 : AI 기반 소비 성향과 실시간 위치를 반영한 참여형 멤버십 혜택 추천
 ---
 
 ## 시스템 아키텍쳐
+<img width="1129" height="495" alt="스크린샷 2025-08-07 오후 8 56 23" src="https://github.com/user-attachments/assets/c24c1696-15b1-43b7-8d5f-81fb1c334c31" />
+
+
+---
+
+## ERD
+<img width="800" height="1017" alt="스크린샷 2025-08-07 오후 9 06 20" src="https://github.com/user-attachments/assets/a90fae99-a296-462e-8608-1d6e4ea84083" />
 
 
 ---
@@ -19,14 +28,10 @@
 
 | 구성 요소 | 기술 |
 |-----------|------|
-| 백엔드 프레임워크 | Spring Boot  |
-| 데이터베이스 | PostgreSQL (RDS) |
-| 로그 브로커 | Redis Stream |
-| 로그 소비자 | Spring + Redis Consumer Group |
-| 배치 처리 | Apache Airflow |
-| 배포 인프라 | AWS EC2, Docker, Nginx |
-| API 문서화 | Swagger/OpenAPI |
-| 기타 | JPA, Spring Security |
+| Backend | Java, Spring Boot, JPA , OAuth2, JWT, Session , PostgreSQL, PostGIS, PGVector , Redis, Redis Stream, Apache Airflow|
+| DevOps | AWS EC2, ELB, S3, CloudFront, Docker, Docker Hub, GitHub Actions|
+| Tools | Swagger, Postman , DBeaver, Coderabbit|
+| AI | OpenAI, RAG |
 
 ---
 
