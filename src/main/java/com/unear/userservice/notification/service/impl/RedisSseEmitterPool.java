@@ -20,7 +20,7 @@ public class RedisSseEmitterPool {
     private final String instanceId = UUID.randomUUID().toString();
 
     public SseEmitter connect(Long userId) {
-        SseEmitter emitter = new SseEmitter(60L * 1000 * 60);
+        SseEmitter emitter = new SseEmitter(0L);
         localEmitters.put(userId, emitter);
 
         stringRedisTemplate.opsForValue().set(
