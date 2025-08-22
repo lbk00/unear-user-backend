@@ -319,7 +319,7 @@ public class PlaceServiceImpl implements PlaceService {
         double lat = requestDto.getLatitude();
         double lon = requestDto.getLongitude();
 
-        List<NearestPlaceProjection> projections = placeRepository.findNearestPlaceIdsByDistance(lat, lon, 5);
+        List<NearestPlaceProjection> projections = placeRepository.findNearestPlaceIdsByDistance(lat, lon);
 
         return projections.stream()
                 .map(NearestPlaceResponseDto::from)
@@ -331,7 +331,7 @@ public class PlaceServiceImpl implements PlaceService {
     public List<NearbyPlaceWithCouponsDto> getNearbyPlacesWithCoupons(NearbyPlaceRequestDto requestDto, Long userId) {
 
         List<NearestPlaceProjection> projections = placeRepository.findNearestPlaceIdsByDistance(
-                requestDto.getLatitude(), requestDto.getLongitude(), 5);
+                requestDto.getLatitude(), requestDto.getLongitude());
         List<Long> placeIds = projections.stream()
                 .map(NearestPlaceProjection::getPlaceId)
                 .toList();
