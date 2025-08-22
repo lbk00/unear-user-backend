@@ -23,7 +23,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new CustomUser(user);
     }
 
-    @Transactional(readOnly = true)
     public CustomUser loadUserByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다: " + userId));
