@@ -4,8 +4,7 @@ import com.unear.userservice.common.enums.DiscountPolicy;
 import com.unear.userservice.common.exception.exception.CouponSoldOutException;
 import com.unear.userservice.event.entity.UnearEvent;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +14,9 @@ import java.util.List;
 @Table(name = "coupon_templates")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CouponTemplate {
 
     @Id

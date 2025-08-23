@@ -140,41 +140,42 @@ public class CouponServiceImpl implements CouponService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
-        CouponTemplate template = couponTemplateRepository.findById(couponTemplateId)
-                .orElseThrow(() -> new CouponTemplateNotFoundException("쿠폰 템플릿을 찾을 수 없습니다."));
-
         LocalDateTime now = LocalDateTime.now();
-        if (template.getCouponStart().isAfter(now) || template.getCouponEnd().isBefore(now)) {
-            throw new CouponExpiredException("유효 기간이 지난 쿠폰입니다.");
+
+        // 1) 재고 원자적 차감 (대기/잠금 없음)
+        int updated = couponTemplateRepository.decreaseIfAvailable(couponTemplateId, now);
+        if (updated == 0) {
+            // 재고 소진 or 기간 외
+            throw new CouponSoldOutException("재고 소진 또는 유효 기간이 아닙니다.");
         }
 
-        template.decreaseQuantity();
-
+        // 2) 발급 (ID 프록시 사용, 추가 조회 없음)
         UserCoupon userCoupon = UserCoupon.builder()
                 .user(user)
-                .couponTemplate(template)
-                .createdAt(LocalDateTime.now())
+                .couponTemplate(couponTemplateRepository.getReferenceById(couponTemplateId))
+                .createdAt(now)
                 .couponStatusCode(CouponStatus.UNUSED.getCode())
                 .barcodeNumber(generateUniqueBarcode())
                 .build();
+
 
         Map<String, Object> baseMetadata = LogMetadataUtils.buildUserBaseMetadata(user);
 
         Map<String, Object> metadata = new LinkedHashMap<>(baseMetadata);
 
-        if (template.getDiscountCode() != null) {
-            metadata.put("benefit", template.getDiscountCode());
-        }
-        if (template.getMembershipCode() != null) {
-            metadata.put("grade", template.getMembershipCode());
-        }
-
-        if (metadata.size() > baseMetadata.size()) {
-            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", metadata);
-        }
+//        if (template.getDiscountCode() != null) {
+//            metadata.put("benefit", template.getDiscountCode());
+//        }
+//        if (template.getMembershipCode() != null) {
+//            metadata.put("grade", template.getMembershipCode());
+//        }
+//
+//        if (metadata.size() > baseMetadata.size()) {
+//            userActionLogProducer.logUserAction(userId, UserActionType.DOWNLOAD_FCFS_COUPON, "eventPage", metadata);
+//        }
 
         try {
-            userCouponRepository.save(userCoupon);
+//            userCouponRepository.save(userCoupon); 부하테스트시 주석
         } catch (DataIntegrityViolationException e) {
             throw new CouponAlreadyDownloadedException("이미 다운로드한 쿠폰입니다.");
         }

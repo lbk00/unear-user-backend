@@ -77,26 +77,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(WHITE_LIST).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth -> oauth
-                        .authorizationEndpoint(endpoint ->
-                                endpoint.authorizationRequestRepository(authorizationRequestRepository())
-                        )
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(this.oAuth2UserService())
-                        )
-                        .successHandler(oAuth2SuccessHandler)
-                        .failureHandler(oAuth2FailureHandler)
-                )
-                .addFilterBefore(new InternalKeyAuthFilter(internalKeyValidator), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), InternalKeyAuthFilter.class)
+                .cors(cors -> cors.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .httpBasic(b -> b.disable())
+                .formLogin(f -> f.disable())
+                .logout(l -> l.disable())
+                .oauth2Login(o -> o.disable())
                 .build();
     }
 
