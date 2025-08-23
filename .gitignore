@@ -39,3 +39,6 @@ out/
 ### 로컬 개발 세팅
 application-secret.yml
 application-local.yml
+
+# Scouter APM agent
+/scouter
