@@ -3,6 +3,11 @@ spring:
     activate:
       on-profile: docker
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
   jpa:
     open-in-view: false               # API 서버 권장 (영속성 컨텍스트를 웹 계층에 노출하지 않음)
     show-sql: true                    # docker 디버깅용
