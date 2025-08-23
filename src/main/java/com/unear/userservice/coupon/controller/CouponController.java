@@ -64,6 +64,30 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success("쿠폰 다운로드 성공", response));
     }
 
+    /*
+    부하 테스트용 api
+    */
+    @PostMapping("/{couponTemplateId}/fcfs_test")
+    public ResponseEntity<ApiResponse<UserCouponResponseDto>> downloadFCFSCouponTest(
+            @PathVariable Long couponTemplateId,
+            @AuthenticationPrincipal CustomUser user,
+            @RequestParam(required = false) Long testUserId
+    ) {
+        Long userId;
+        if (user != null && user.getUser() != null) {
+            // 정상 로그인 요청
+            userId = user.getUser().getUserId();
+        } else if (testUserId != null) {
+            // 부하테스트 시 토큰 없이 호출 가능
+            userId = testUserId;
+        } else {
+            throw new UnauthorizedException("인증되지 않은 사용자입니다.");
+        }
+        UserCouponResponseDto response = couponService.downloadFCFSCoupon(userId, couponTemplateId);
+        return ResponseEntity.ok(ApiResponse.success("쿠폰 다운로드 성공", response));
+    }
+
+
     @CouponApiDocs.GetMyCoupons
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserCouponListResponseDto>> getMyCoupons(
