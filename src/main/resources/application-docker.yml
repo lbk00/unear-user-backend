@@ -130,6 +130,10 @@ springdoc:
     config-url: /v3/api-docs/swagger-config
     url: /v3/api-docs
 
+server:
+  tomcat:
+    max-threads: 300
+
 logging:
   level:
     root: INFO
