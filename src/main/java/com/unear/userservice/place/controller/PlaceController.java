@@ -107,6 +107,32 @@ public class PlaceController {
     }
 
 
+    /*쿼리 테스트용 api*/
+    @PlaceApiDocs.GetFilteredPlaces
+    @GetMapping("/test")
+    public ResponseEntity<ApiResponse<List<PlaceRenderResponseDto>>> getFilteredPlacesTest(
+            @Validated @ParameterObject @ModelAttribute PlaceRequestDto requestDto,
+            @RequestParam(required = false) Long testUserId,
+            @AuthenticationPrincipal CustomUser user
+    ) {
+        // 인증 유저가 있으면 userId 사용, 없으면 testUserId 사용
+        Long userId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : testUserId;
+        List<PlaceRenderResponseDto> result = placeService.getFilteredPlaces(requestDto, userId);
+        return ResponseEntity.ok(ApiResponse.success("장소 목록 조회 성공", result));
+    }
+
+    @GetMapping("/nearby-with-coupons-test")
+    public ResponseEntity<ApiResponse<List<NearbyPlaceWithCouponsDto>>> getNearbyPlacesWithCouponsTest(
+            @Valid @ParameterObject @ModelAttribute NearbyPlaceRequestDto requestDto,
+            @RequestParam(required = false) Long testUserId,
+            @AuthenticationPrincipal CustomUser user
+    ) {
+        Long userId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : testUserId;
+        List<NearbyPlaceWithCouponsDto> result = placeService.getNearbyPlacesWithCoupons(requestDto, userId);
+        return ResponseEntity.ok(ApiResponse.success("주변 매장 및 쿠폰 조회 성공", result));
+    }
+
+
 }
 
 
