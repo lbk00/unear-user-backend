@@ -31,7 +31,7 @@ const locations = [
 export default function () {
     // 1. 테스트 데이터 중 하나를 무작위로 선택합니다.
     const randomLocation = locations[Math.floor(Math.random() * locations.length)];
-    const randomUserId = Math.floor(Math.random() * 1000) + 1; // 1 ~ 1000 사이의 랜덤 유저 ID
+    const randomUserId = Math.floor(Math.random() * 1000) + 1000; // 1 ~ 1000 사이의 랜덤 유저 ID
 
     // 2. API 엔드포인트 URL을 만듭니다.
     const url = `http://localhost:8080/places/nearby-with-coupons-test?latitude=${randomLocation.lat}&longitude=${randomLocation.lon}&testUserId=${randomUserId}`;
