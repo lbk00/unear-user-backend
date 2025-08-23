@@ -132,7 +132,7 @@ springdoc:
 
 server:
   tomcat:
-    max-threads: 300
+    max-threads: 3000
 
 logging:
   level:

@@ -7,38 +7,37 @@ const COUPON_ID  = __ENV.COUPON_ID  || '326';
 const METHOD     = (__ENV.METHOD || 'POST').toUpperCase();
 const AUTH_TOKEN = __ENV.AUTH_TOKEN || '';
 
-// 유저 ID 범위 (1000 ~ 3999)
+// 유저 ID 범위 (1000 ~ 4000)
 const USER_START = 1000;
 const USER_END   = 3999;
+
 const userIds = Array.from(
     { length: USER_END - USER_START + 1 },
     (_, i) => USER_START + i
 );
+
 const TOTAL_USERS = userIds.length; // 3000명
 
 // ========= Options =========
 export const options = {
     scenarios: {
-        fcfs_rampup: {
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: '10s', target: 500 },
-                { duration: '10s', target: 1000 },
-                { duration: '10s', target: 2000 },
-                { duration: '10s', target: 3000 },
-                { duration: '10s', target: 0 },
-            ],
+        fcfs_spike: {
+            executor: 'shared-iterations',
+            vus: TOTAL_USERS,           // 3000
+            iterations: TOTAL_USERS,    // 각자 1회
+            maxDuration: '1m',
+            startTime: '0s',
             gracefulStop: '0s',
         },
     },
     thresholds: {
-        http_req_failed: ['rate<0.05'],
-        http_req_duration: ['p(95)<2000'],
+        http_req_failed:    ['rate<0.05'],
+        http_req_duration:  ['p(95)<2000'],
     },
     discardResponseBodies: true,
 };
 export const summaryTrendStats = ['avg','min','med','max','p(90)','p(95)'];
+
 
 // ========= Helpers =========
 function params(uid) {
@@ -50,9 +49,8 @@ function params(uid) {
 
 // ========= VU logic =========
 export default function () {
-    // Ramp-up 시 VU 수가 TOTAL_USERS보다 작으면 안전하게 모듈러 연산
-    const uid = userIds[(__VU - 1) % TOTAL_USERS];
-    const url = `${BASE_URL}/coupons/${COUPON_ID}/fcfs_test?testUserId=${uid}`;
+    const uid = userIds[__VU - 1]; // VU 번호 → 유저ID 매핑
+    const url = `${BASE_URL}/coupons/${COUPON_ID}/fcfs-test?testUserId=${uid}`;
     const p = params(uid);
 
     const res = METHOD === 'POST'
@@ -60,7 +58,12 @@ export default function () {
         : http.get(url, p);
 
     check(res, {
-        'status 200-202 or 409/410/429': (r) =>
-            [200,201,202,409,410,429].includes(r.status),
+        'valid status': (r) =>
+            r.status === 200 ||
+            r.status === 201 ||
+            r.status === 202 ||
+            r.status === 409 || // 중복
+            r.status === 410 || // 소진
+            r.status === 429,   // 레이트 리밋
     });
 }
