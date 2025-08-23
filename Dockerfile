@@ -4,16 +4,11 @@ WORKDIR /app
 COPY . .
 RUN ./gradlew clean build -x test
 
-# 2단계: 실행용 이미지 (Scouter 에이전트 추가)
+# 2단계: 실행용 이미지 (Scouter 관련 내용 모두 삭제)
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-
-COPY ./scouter /scouter
-
-# 기존 jar 파일 복사
+# Scouter 관련 COPY 라인 삭제
 COPY --from=builder /app/build/libs/*.jar app.jar
-
 EXPOSE 8080
-
-# --- ENTRYPOINT에 -javaagent 옵션 추가 ---
-ENTRYPOINT ["java", "-javaagent:/scouter/scouter.agent.jar", "-Xms512m", "-Xmx4g", "-jar", "app.jar"]
+# ENTRYPOINT를 원래대로 복구
+ENTRYPOINT ["java", "-Xms512m", "-Xmx4g", "-jar", "app.jar"]
