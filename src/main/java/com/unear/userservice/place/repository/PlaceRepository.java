@@ -61,7 +61,7 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
     WHERE ST_Distance(
         CAST(location AS geography),\s
         CAST(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326) AS geography)
-    ) <= 3000
+    ) <= 300000
     ORDER BY distance
     """, nativeQuery = true)
     List<NearestPlaceProjection> findNearestPlaceIdsByDistance(
