@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check } from 'k6';
 
 // ========= ENV =========
-const BASE_URL   = __ENV.BASE_URL   || 'https://api.unear.site/api/app';
+const BASE_URL   = __ENV.BASE_URL   || 'http://localhost:8080';
 const COUPON_ID  = __ENV.COUPON_ID  || '326';
 const METHOD     = (__ENV.METHOD || 'POST').toUpperCase();
 const AUTH_TOKEN = __ENV.AUTH_TOKEN || '';
@@ -50,7 +50,7 @@ function params(uid) {
 // ========= VU logic =========
 export default function () {
     const uid = userIds[__VU - 1]; // VU 번호 → 유저ID 매핑
-    const url = `${BASE_URL}/coupons/${COUPON_ID}/fcfs?testUserId=${uid}`;
+    const url = `${BASE_URL}/coupons/${COUPON_ID}/fcfs_test?testUserId=${uid}`;
     const p = params(uid);
 
     const res = METHOD === 'POST'
