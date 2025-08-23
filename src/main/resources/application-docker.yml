@@ -44,19 +44,6 @@ spring:
 
   # Redis 설정 최적화
   data:
-    # Docker 환경 메일 설정
-    mail:
-      host: ${MAIL_HOST}
-      port: ${MAIL_PORT}
-      username: ${MAIL_USERNAME}
-      password: ${MAIL_PASSWORD}
-      properties:
-        mail:
-          smtp:
-            auth: true
-            starttls:
-              enable: true
-
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
@@ -68,6 +55,19 @@ spring:
           max-idle: 50
           min-idle: 10
           max-wait: 3000ms
+
+  # Docker 환경 메일 설정
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
   # 기존 OAuth2 설정 유지...
   security:
