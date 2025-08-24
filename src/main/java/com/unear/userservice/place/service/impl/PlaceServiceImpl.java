@@ -1,5 +1,6 @@
 package com.unear.userservice.place.service.impl;
 
+import com.unear.userservice.benefit.entity.FranchiseDiscountPolicy;
 import com.unear.userservice.benefit.entity.GeneralDiscountPolicy;
 import com.unear.userservice.benefit.repository.FranchiseDiscountPolicyRepository;
 import com.unear.userservice.benefit.repository.GeneralDiscountPolicyRepository;
@@ -380,9 +381,23 @@ public class PlaceServiceImpl implements PlaceService {
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())
                 ));
 
+        // 1. 반복문에 필요한 모든 policyId를 미리 수집
+        List<Long> policyIds = templates.stream()
+                .filter(ct -> PlaceType.fromCode(ct.getMarkerCode()).isFranchise())
+                .map(CouponTemplate::getDiscountPolicyDetailId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
 
+        // 2. 수집한 ID들을 사용해 DB를 한 번만 조회하고, Map으로 변환
+        Map<Long, Long> policyToFranchiseIdMap = franchiseDiscountPolicyRepository.findAllById(policyIds).stream()
+                .filter(p -> p.getFranchise() != null)
+                .collect(Collectors.toMap(
+                        FranchiseDiscountPolicy::getFranchiseDiscountPolicyId,
+                        p -> p.getFranchise().getFranchiseId()
+                ));
 
-
+        // 3. DB 조회 없이 Map을 사용하여 policyRefMap을 생성
         Map<Long, DiscountPolicyRef> policyRefMap = templates.stream()
                 .flatMap(ct -> {
                     List<Long> resolvedPlaceIds = benefitDescriptionResolver.resolvePlaceIdFromTemplateList(ct, places);
@@ -395,16 +410,14 @@ public class PlaceServiceImpl implements PlaceService {
                             Long policyId = ct.getDiscountPolicyDetailId();
 
                             if (policyId != null) {
-                                franchiseId = franchiseDiscountPolicyRepository.findById(policyId)
-                                        .map(f -> f.getFranchise().getFranchiseId())
-                                        .orElse(null);
+                                // DB 조회(findById) 대신, 미리 만들어둔 Map에서 값 찾기
+                                franchiseId = policyToFranchiseIdMap.get(policyId);
                             } else {
                                 Place place = placeMap.get(placeId);
                                 franchiseId = (place != null && place.getFranchise() != null)
                                         ? place.getFranchise().getFranchiseId()
                                         : null;
                             }
-
                             return Map.entry(placeId, new DiscountPolicyRef(placeId, null, franchiseId));
                         } else {
                             return Map.entry(placeId, new DiscountPolicyRef(placeId, ct.getDiscountPolicyDetailId(), null));
