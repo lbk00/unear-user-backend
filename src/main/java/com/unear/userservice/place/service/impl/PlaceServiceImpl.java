@@ -157,8 +157,35 @@ public class PlaceServiceImpl implements PlaceService {
         List<CouponTemplate> templates = couponTemplateRepository.findByPlacesAndMembership(
                 singlePlaceList, franchises, membershipCode);
 
+        List<Long> franchisePolicyIds = templates.stream()
+                .filter(ct -> PlaceType.fromCode(ct.getMarkerCode()).isFranchise())
+                .map(CouponTemplate::getDiscountPolicyDetailId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, FranchiseDiscountPolicy> franchisePolicyMap = franchiseDiscountPolicyRepository.findAllById(franchisePolicyIds).stream()
+                .collect(Collectors.toMap(
+                        FranchiseDiscountPolicy::getFranchiseDiscountPolicyId,
+                        Function.identity()
+                ));
+
+        List<Long> generalPolicyIds = templates.stream()
+                .filter(ct -> !PlaceType.fromCode(ct.getMarkerCode()).isFranchise())
+                .map(CouponTemplate::getDiscountPolicyDetailId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, GeneralDiscountPolicy> generalPolicyMap = generalDiscountPolicyRepository.findAllById(generalPolicyIds).stream()
+                .collect(Collectors.toMap(
+                        GeneralDiscountPolicy::getGeneralDiscountPolicyId,
+                        Function.identity()
+                ));
+
         List<CouponResponseDto> coupons = templates.stream()
-                .filter(ct -> benefitDescriptionResolver.resolvePlaceIdFromTemplateList(ct, singlePlaceList).contains(placeId))
+                .filter(ct -> benefitDescriptionResolver.resolvePlaceIdFromTemplateList(
+                        ct, singlePlaceList, franchisePolicyMap, generalPolicyMap).contains(placeId))
                 .map(ct -> {
                     Long templateId = ct.getCouponTemplateId();
                     boolean isDownloaded = templateToUserCouponId.containsKey(templateId);
@@ -167,17 +194,23 @@ public class PlaceServiceImpl implements PlaceService {
                 })
                 .toList();
 
-
         DiscountPolicyRef policyRef = templates.stream()
-                .filter(ct -> benefitDescriptionResolver.resolvePlaceIdFromTemplateList(ct, singlePlaceList).contains(placeId))
+                .filter(ct -> benefitDescriptionResolver.resolvePlaceIdFromTemplateList(
+                        ct, singlePlaceList, franchisePolicyMap, generalPolicyMap).contains(placeId))
                 .map(ct -> {
                     PlaceType markerType = PlaceType.fromCode(ct.getMarkerCode());
                     if (markerType.isFranchise()) {
-                        Long franchiseId = (ct.getDiscountPolicyDetailId() != null)
-                                ? franchiseDiscountPolicyRepository.findById(ct.getDiscountPolicyDetailId())
-                                .map(f -> f.getFranchise().getFranchiseId())
-                                .orElse(null)
-                                : place.getFranchise() != null ? place.getFranchise().getFranchiseId() : null;
+                        Long franchiseId = null;
+                        Long policyId = ct.getDiscountPolicyDetailId();
+
+                        if (policyId != null) {
+                            FranchiseDiscountPolicy policy = franchisePolicyMap.get(policyId);
+                            franchiseId = (policy != null && policy.getFranchise() != null)
+                                    ? policy.getFranchise().getFranchiseId()
+                                    : null;
+                        } else {
+                            franchiseId = place.getFranchise() != null ? place.getFranchise().getFranchiseId() : null;
+                        }
                         return new DiscountPolicyRef(placeId, null, franchiseId);
                     } else {
                         return new DiscountPolicyRef(placeId, ct.getDiscountPolicyDetailId(), null);
@@ -197,14 +230,24 @@ public class PlaceServiceImpl implements PlaceService {
             if (policyRef == null || policyRef.discountPolicyDetailId() == null) {
                 policyRef = new DiscountPolicyRef(pid, policy.getGeneralDiscountPolicyId(), null);
             }
+            generalPolicyMap.put(policy.getGeneralDiscountPolicyId(), policy);
         }
+
+        List<Long> franchiseIds = franchises.stream()
+                .map(Franchise::getFranchiseId)
+                .toList();
+
+        Map<Long, List<FranchiseDiscountPolicy>> franchisePoliciesMap =
+                franchiseIds.isEmpty() ? Map.of() :
+                        franchiseDiscountPolicyRepository.findByFranchise_FranchiseIdIn(franchiseIds).stream()
+                                .collect(Collectors.groupingBy(p -> p.getFranchise().getFranchiseId()));
 
         Long franchiseId = (policyRef != null && policyRef.franchiseId() != null)
                 ? policyRef.franchiseId()
                 : (place.getFranchise() != null ? place.getFranchise().getFranchiseId() : null);
 
-        String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
-
+        String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(
+                policyRef, membershipCode, franchisePoliciesMap, generalPolicyMap);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 없음"));
@@ -359,12 +402,39 @@ public class PlaceServiceImpl implements PlaceService {
         List<CouponTemplate> templates = couponTemplateRepository.findByPlacesAndMembership(
                 places, franchises, membershipCode);
 
+        List<Long> franchisePolicyIds = templates.stream()
+                .filter(ct -> PlaceType.fromCode(ct.getMarkerCode()).isFranchise())
+                .map(CouponTemplate::getDiscountPolicyDetailId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, FranchiseDiscountPolicy> franchisePolicyMap = franchiseDiscountPolicyRepository.findAllById(franchisePolicyIds).stream()
+                .collect(Collectors.toMap(
+                        FranchiseDiscountPolicy::getFranchiseDiscountPolicyId,
+                        Function.identity()
+                ));
+
+        List<Long> generalPolicyIds = templates.stream()
+                .filter(ct -> !PlaceType.fromCode(ct.getMarkerCode()).isFranchise())
+                .map(CouponTemplate::getDiscountPolicyDetailId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, GeneralDiscountPolicy> generalPolicyMap = generalDiscountPolicyRepository.findAllById(generalPolicyIds).stream()
+                .collect(Collectors.toMap(
+                        GeneralDiscountPolicy::getGeneralDiscountPolicyId,
+                        Function.identity()
+                ));
+
         Map<Long, List<CouponResponseDto>> couponMap = templates.stream()
                 .flatMap(ct -> {
                     Long templateId = ct.getCouponTemplateId();
                     boolean isDownloaded = templateToUserCouponId.containsKey(templateId);
                     Long userCouponId = templateToUserCouponId.get(templateId);
-                    List<Long> resolvedPlaceIds = benefitDescriptionResolver.resolvePlaceIdFromTemplateList(ct, places);
+                    List<Long> resolvedPlaceIds = benefitDescriptionResolver.resolvePlaceIdFromTemplateList(
+                            ct, places, franchisePolicyMap, generalPolicyMap);
                     if (resolvedPlaceIds == null || resolvedPlaceIds.isEmpty()) return Stream.empty();
 
                     return resolvedPlaceIds.stream()
@@ -378,12 +448,10 @@ public class PlaceServiceImpl implements PlaceService {
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())
                 ));
 
-
-
-
         Map<Long, DiscountPolicyRef> policyRefMap = templates.stream()
                 .flatMap(ct -> {
-                    List<Long> resolvedPlaceIds = benefitDescriptionResolver.resolvePlaceIdFromTemplateList(ct, places);
+                    List<Long> resolvedPlaceIds = benefitDescriptionResolver.resolvePlaceIdFromTemplateList(
+                            ct, places, franchisePolicyMap, generalPolicyMap);
                     if (resolvedPlaceIds == null || resolvedPlaceIds.isEmpty()) return Stream.empty();
 
                     PlaceType markerType = PlaceType.fromCode(ct.getMarkerCode());
@@ -393,16 +461,16 @@ public class PlaceServiceImpl implements PlaceService {
                             Long policyId = ct.getDiscountPolicyDetailId();
 
                             if (policyId != null) {
-                                franchiseId = franchiseDiscountPolicyRepository.findById(policyId)
-                                        .map(f -> f.getFranchise().getFranchiseId())
-                                        .orElse(null);
+                                FranchiseDiscountPolicy policy = franchisePolicyMap.get(policyId);
+                                franchiseId = (policy != null && policy.getFranchise() != null)
+                                        ? policy.getFranchise().getFranchiseId()
+                                        : null;
                             } else {
                                 Place place = placeMap.get(placeId);
                                 franchiseId = (place != null && place.getFranchise() != null)
                                         ? place.getFranchise().getFranchiseId()
                                         : null;
                             }
-
                             return Map.entry(placeId, new DiscountPolicyRef(placeId, null, franchiseId));
                         } else {
                             return Map.entry(placeId, new DiscountPolicyRef(placeId, ct.getDiscountPolicyDetailId(), null));
@@ -411,7 +479,13 @@ public class PlaceServiceImpl implements PlaceService {
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
+        List<Long> franchiseIds = franchises.stream()
+                .map(Franchise::getFranchiseId)
+                .toList();
 
+        Map<Long, List<FranchiseDiscountPolicy>> franchisePoliciesMap =
+                franchiseDiscountPolicyRepository.findByFranchise_FranchiseIdIn(franchiseIds).stream()
+                        .collect(Collectors.groupingBy(p -> p.getFranchise().getFranchiseId()));
 
         List<GeneralDiscountPolicy> generalPolicies = generalDiscountPolicyRepository.findByPlaceIn(places);
         for (GeneralDiscountPolicy policy : generalPolicies) {
@@ -419,6 +493,7 @@ public class PlaceServiceImpl implements PlaceService {
             if (!policyRefMap.containsKey(placeId)) {
                 policyRefMap.put(placeId, new DiscountPolicyRef(placeId, policy.getGeneralDiscountPolicyId(), null));
             }
+            generalPolicyMap.put(policy.getGeneralDiscountPolicyId(), policy);
         }
 
         for (Place place : places) {
@@ -434,7 +509,6 @@ public class PlaceServiceImpl implements PlaceService {
 
         return projections.stream()
                 .map(p -> {
-
                     Place place = placeMap.get(p.getPlaceId());
                     if (place == null) return null;
 
@@ -442,7 +516,8 @@ public class PlaceServiceImpl implements PlaceService {
 
                     DiscountPolicyRef policyRef = policyRefMap.get(place.getPlaceId());
 
-                    String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
+                    String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(
+                            policyRef, membershipCode, franchisePoliciesMap, generalPolicyMap);
 
                     Long franchiseId = (policyRef != null && policyRef.franchiseId() != null)
                             ? policyRef.franchiseId()
@@ -467,7 +542,6 @@ public class PlaceServiceImpl implements PlaceService {
                             .coupons(couponMap.getOrDefault(place.getPlaceId(), List.of()))
                             .benefitDesc(benefitDesc)
                             .build();
-
                 })
                 .filter(Objects::nonNull)
                 .toList();

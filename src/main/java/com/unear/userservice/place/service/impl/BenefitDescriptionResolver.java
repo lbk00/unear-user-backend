@@ -19,16 +19,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BenefitDescriptionResolver {
 
-    private final FranchiseDiscountPolicyRepository franchiseDiscountPolicyRepository;
-    private final GeneralDiscountPolicyRepository generalDiscountPolicyRepository;
+    public String resolveBenefitDesc(
+            PlaceServiceImpl.DiscountPolicyRef policyRef,
+            String membershipCode,
+            Map<Long, List<FranchiseDiscountPolicy>> franchisePoliciesMap,
+            Map<Long, GeneralDiscountPolicy> generalPoliciesMap) {
 
-    public String resolveBenefitDesc(PlaceServiceImpl.DiscountPolicyRef policyRef, String membershipCode) {
-        if (policyRef == null) return null;
+        if (policyRef == null) {
+            return null;
+        }
 
-        // 프랜차이즈 정책인 경우
+        // 프랜차이즈 정책 처리
         if (policyRef.franchiseId() != null) {
-            List<FranchiseDiscountPolicy> policies = franchiseDiscountPolicyRepository
-                    .findByFranchise_FranchiseId(policyRef.franchiseId());
+
+            List<FranchiseDiscountPolicy> policies = franchisePoliciesMap.getOrDefault(policyRef.franchiseId(), List.of());
 
             FranchiseDiscountPolicy matchedPolicy = policies.stream()
                     .filter(p -> p.getMembershipCode().equalsIgnoreCase(membershipCode))
@@ -45,17 +49,20 @@ public class BenefitDescriptionResolver {
                 );
             }
 
-            // 일반 장소 정책인 경우
+        // 일반 장소 정책 처리
         } else if (policyRef.discountPolicyDetailId() != null) {
-            return generalDiscountPolicyRepository.findById(policyRef.discountPolicyDetailId())
-                    .map(policy -> formatBenefitDescription(
-                            policy.getDiscountPercent(),
-                            policy.getMaxDiscountAmount(),
-                            policy.getFixedDiscount(),
-                            policy.getUnitBaseAmount(),
-                            policy.getDiscountCode()
-                    ))
-                    .orElse(null);
+
+            GeneralDiscountPolicy policy = generalPoliciesMap.get(policyRef.discountPolicyDetailId());
+
+            if (policy != null) {
+                return formatBenefitDescription(
+                        policy.getDiscountPercent(),
+                        policy.getMaxDiscountAmount(),
+                        policy.getFixedDiscount(),
+                        policy.getUnitBaseAmount(),
+                        policy.getDiscountCode()
+                );
+            }
         }
 
         return null;
@@ -84,18 +91,22 @@ public class BenefitDescriptionResolver {
         }
     }
 
-    public List<Long> resolvePlaceIdFromTemplateList(CouponTemplate ct, List<Place> places) {
+    public List<Long> resolvePlaceIdFromTemplateList(
+            CouponTemplate ct,
+            List<Place> places,
+            Map<Long, FranchiseDiscountPolicy> franchisePolicyMap,
+            Map<Long, GeneralDiscountPolicy> generalPolicyMap) {
+
         PlaceType markerType = PlaceType.fromCode(ct.getMarkerCode());
 
         if (markerType.isFranchise()) {
             Long policyId = ct.getDiscountPolicyDetailId();
             if (policyId == null) return List.of();
 
-            Long franchiseId = franchiseDiscountPolicyRepository.findById(policyId)
-                    .map(f -> f.getFranchise().getFranchiseId())
-                    .orElse(null);
+            FranchiseDiscountPolicy policy = franchisePolicyMap.get(policyId);
+            if (policy == null || policy.getFranchise() == null) return List.of();
 
-            if (franchiseId == null) return List.of();
+            Long franchiseId = policy.getFranchise().getFranchiseId();
 
             return places.stream()
                     .filter(p -> p.getFranchise() != null && p.getFranchise().getFranchiseId().equals(franchiseId))
@@ -103,10 +114,10 @@ public class BenefitDescriptionResolver {
                     .toList();
 
         } else {
-            return generalDiscountPolicyRepository.findById(ct.getDiscountPolicyDetailId())
-                    .map(g -> g.getPlace().getPlaceId())
-                    .map(List::of)
-                    .orElse(List.of());
+            GeneralDiscountPolicy policy = generalPolicyMap.get(ct.getDiscountPolicyDetailId());
+            return (policy != null && policy.getPlace() != null)
+                    ? List.of(policy.getPlace().getPlaceId())
+                    : List.of();
         }
     }
 }
