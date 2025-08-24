@@ -29,12 +29,11 @@ public class BenefitDescriptionResolver {
             return null;
         }
 
-        // --- 프랜차이즈 정책 처리 ---
+        // 프랜차이즈 정책 처리
         if (policyRef.franchiseId() != null) {
-            // 1. 전달받은 Map에서 해당 프랜차이즈의 정책 리스트를 조회합니다.
+
             List<FranchiseDiscountPolicy> policies = franchisePoliciesMap.getOrDefault(policyRef.franchiseId(), List.of());
 
-            // 2. 메모리에서 멤버십 코드가 일치하는 정책을 찾습니다.
             FranchiseDiscountPolicy matchedPolicy = policies.stream()
                     .filter(p -> p.getMembershipCode().equalsIgnoreCase(membershipCode))
                     .findFirst()
@@ -50,13 +49,12 @@ public class BenefitDescriptionResolver {
                 );
             }
 
-            // --- 일반 장소 정책 처리 ---
+        // 일반 장소 정책 처리
         } else if (policyRef.discountPolicyDetailId() != null) {
-            // 1. 전달받은 Map에서 해당 정책 ID로 정책 객체를 바로 조회합니다.
+
             GeneralDiscountPolicy policy = generalPoliciesMap.get(policyRef.discountPolicyDetailId());
 
             if (policy != null) {
-                // 2. 찾은 policy 객체로 설명 문구를 생성합니다.
                 return formatBenefitDescription(
                         policy.getDiscountPercent(),
                         policy.getMaxDiscountAmount(),
@@ -105,7 +103,6 @@ public class BenefitDescriptionResolver {
             Long policyId = ct.getDiscountPolicyDetailId();
             if (policyId == null) return List.of();
 
-            // DB 조회 대신, 전달받은 Map에서 데이터를 찾음
             FranchiseDiscountPolicy policy = franchisePolicyMap.get(policyId);
             if (policy == null || policy.getFranchise() == null) return List.of();
 
@@ -117,7 +114,6 @@ public class BenefitDescriptionResolver {
                     .toList();
 
         } else {
-            // DB 조회 대신, 전달받은 Map에서 데이터를 찾음
             GeneralDiscountPolicy policy = generalPolicyMap.get(ct.getDiscountPolicyDetailId());
             return (policy != null && policy.getPlace() != null)
                     ? List.of(policy.getPlace().getPlaceId())

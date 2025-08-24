@@ -239,7 +239,7 @@ public class PlaceServiceImpl implements PlaceService {
 
         Map<Long, List<FranchiseDiscountPolicy>> franchisePoliciesMap =
                 franchiseIds.isEmpty() ? Map.of() :
-                        franchiseDiscountPolicyRepository.findByFranchiseIdIn(franchiseIds).stream()
+                        franchiseDiscountPolicyRepository.findByFranchise_FranchiseIdIn(franchiseIds).stream()
                                 .collect(Collectors.groupingBy(p -> p.getFranchise().getFranchiseId()));
 
         Long franchiseId = (policyRef != null && policyRef.franchiseId() != null)
@@ -489,7 +489,7 @@ public class PlaceServiceImpl implements PlaceService {
                 .toList();
 
         Map<Long, List<FranchiseDiscountPolicy>> franchisePoliciesMap =
-                franchiseDiscountPolicyRepository.findByFranchiseIdIn(franchiseIds).stream()
+                franchiseDiscountPolicyRepository.findByFranchise_FranchiseIdIn(franchiseIds).stream()
                         .collect(Collectors.groupingBy(p -> p.getFranchise().getFranchiseId()));
 
         // 6. 일반 정책 추가
