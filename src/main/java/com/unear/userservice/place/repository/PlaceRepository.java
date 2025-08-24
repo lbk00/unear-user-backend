@@ -58,10 +58,10 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
             CAST(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326) AS geography)
         ) AS distance
     FROM places
-    WHERE ST_Distance(
+    WHERE ST_DWithin (
         CAST(location AS geography),\s
         CAST(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326) AS geography)
-    ) <= 3000
+    , 3000)
     ORDER BY distance
     LIMIT 5
     """, nativeQuery = true)
