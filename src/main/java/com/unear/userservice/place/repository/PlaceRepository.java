@@ -63,6 +63,7 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
         CAST(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326) AS geography)
     ) <= 3000
     ORDER BY distance
+    LIMIT 5
     """, nativeQuery = true)
     List<NearestPlaceProjection> findNearestPlaceIdsByDistance(
             @Param("latitude") double latitude,
