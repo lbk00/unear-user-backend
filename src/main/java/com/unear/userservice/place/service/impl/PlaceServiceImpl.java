@@ -29,7 +29,6 @@ import com.unear.userservice.user.entity.User;
 import com.unear.userservice.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -427,24 +426,16 @@ public class PlaceServiceImpl implements PlaceService {
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
-        // General Discount Policy 조회 및 Map 생성
-        Map<Long, GeneralDiscountPolicy> generalPolicyMap = generalDiscountPolicyRepository.findByPlaceIn(places)
-                .stream()
-                .collect(Collectors.toMap(
-                        gdp -> gdp.getPlace().getPlaceId(),
-                        Function.identity()
-                ));
 
-        // policyRefMap에 general policy 추가
-        for (Map.Entry<Long, GeneralDiscountPolicy> entry : generalPolicyMap.entrySet()) {
-            Long placeId = entry.getKey();
-            GeneralDiscountPolicy policy = entry.getValue();
+
+        List<GeneralDiscountPolicy> generalPolicies = generalDiscountPolicyRepository.findByPlaceIn(places);
+        for (GeneralDiscountPolicy policy : generalPolicies) {
+            Long placeId = policy.getPlace().getPlaceId();
             if (!policyRefMap.containsKey(placeId)) {
                 policyRefMap.put(placeId, new DiscountPolicyRef(placeId, policy.getGeneralDiscountPolicyId(), null));
             }
         }
 
-        // franchise가 있는 place에 대해 기본 policyRef 추가
         for (Place place : places) {
             if (!policyRefMap.containsKey(place.getPlaceId()) && place.getFranchise() != null) {
                 policyRefMap.put(place.getPlaceId(), new DiscountPolicyRef(
@@ -452,52 +443,21 @@ public class PlaceServiceImpl implements PlaceService {
             }
         }
 
-        // 모든 franchise ID 수집 (benefit 해결을 위해)
-        Set<Long> allFranchiseIds = new HashSet<>();
-
-        // places에서 franchise ID 수집
-        places.stream()
-                .map(Place::getFranchise)
-                .filter(Objects::nonNull)
-                .forEach(f -> allFranchiseIds.add(f.getFranchiseId()));
-
-        // policyRefMap에서 franchise ID 수집
-        policyRefMap.values().stream()
-                .map(DiscountPolicyRef::franchiseId)
-                .filter(Objects::nonNull)
-                .forEach(allFranchiseIds::add);
-
-        // 모든 franchise discount policy를 한 번에 조회
-        Map<Long, List<FranchiseDiscountPolicy>> franchisePolicyMap = new HashMap<>();
-        if (!allFranchiseIds.isEmpty()) {
-            franchisePolicyMap = franchiseDiscountPolicyRepository.findByFranchiseIdIn(new ArrayList<>(allFranchiseIds))
-                    .stream()
-                    .collect(Collectors.groupingBy(
-                            fdp -> fdp.getFranchise().getFranchiseId()
-                    ));
-        }
-
-        // BenefitResolverContext 생성 (benefitDescriptionResolver가 DB 조회 없이 작동하도록)
-        BenefitResolverContext context = BenefitResolverContext.builder()
-                .membershipCode(membershipCode)
-                .franchisePolicyMap(franchisePolicyMap)
-                .generalPolicyMap(generalPolicyMap)
-                .build();
-
         Set<Long> favoriteIds = userId != null
                 ? favoritePlaceRepository.findPlaceIdsByUserId(userId)
                 : Set.of();
 
         return projections.stream()
                 .map(p -> {
+
                     Place place = placeMap.get(p.getPlaceId());
                     if (place == null) return null;
 
                     boolean isFavorite = favoriteIds.contains(place.getPlaceId());
+
                     DiscountPolicyRef policyRef = policyRefMap.get(place.getPlaceId());
 
-                    // DB 조회 없이 미리 준비된 context를 사용하여 benefit 해결
-                    String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, String.valueOf(context));
+                    String benefitDesc = benefitDescriptionResolver.resolveBenefitDesc(policyRef, membershipCode);
 
                     Long franchiseId = (policyRef != null && policyRef.franchiseId() != null)
                             ? policyRef.franchiseId()
@@ -522,6 +482,7 @@ public class PlaceServiceImpl implements PlaceService {
                             .coupons(couponMap.getOrDefault(place.getPlaceId(), List.of()))
                             .benefitDesc(benefitDesc)
                             .build();
+
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -533,16 +494,5 @@ public class PlaceServiceImpl implements PlaceService {
             Long franchiseId
     ) {}
 
-    @Builder
-    public static class BenefitResolverContext {
-        private final String membershipCode;
-        private final Map<Long, List<FranchiseDiscountPolicy>> franchisePolicyMap;
-        private final Map<Long, GeneralDiscountPolicy> generalPolicyMap;
-
-        // getters
-        public String getMembershipCode() { return membershipCode; }
-        public Map<Long, List<FranchiseDiscountPolicy>> getFranchisePolicyMap() { return franchisePolicyMap; }
-        public Map<Long, GeneralDiscountPolicy> getGeneralPolicyMap() { return generalPolicyMap; }
-    }
 
 }
